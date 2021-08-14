@@ -1,19 +1,11 @@
 
 
-input[type=button]{
-	background: gray;
-	/* width: 20%; */
-	/* font-size: 40px; */
-	font-weight: 500;
-	margin: 2%;
-	border-radius: 4px;
-}
 
-input[type=text]{
-	width: 90%;
-	font-size: 20px;
-	border: 2px inset black;
-	border-width: 1px;
+
+textarea{
+	width: 598px;
+	height: 300px;
+	padding: 10px;
 }
 
 body{
@@ -24,5 +16,5 @@ body{
 
 form { 
 margin: 0 auto; 
-width:250px;
+width:600px;
 }

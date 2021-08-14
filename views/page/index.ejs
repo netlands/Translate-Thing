@@ -2,7 +2,7 @@
 <html>
 <head>
 	<link rel="stylesheet" href="../css/style.css">
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <meta charset="utf-8">
 <title>Translate Thing</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -43,7 +43,7 @@
 
     
 <div class="container">
-
+ 
 <div class="row justify-content-center p-5">
 
 <!-- <div class="card " style= "width: 22rem;">
@@ -52,18 +52,11 @@
 	<span class="border p-5">
 <form name="my_form">
 	<div class="text-center pb-3">
-		<input type="text" name="en">
-		<input type="text" name="ja">
-		<input type="button" value=" Translate " onclick="">
+		<textarea type="text" name="en" id="original">material: silk&#13;&#10;color: red&#13;&#10;width: 120 cm&#13;&#10;yuki: 60 cm</textarea>
+		<div><input type="button" class="btn btn-secondary btn-block" value=" Translate " id="HButton" onclick=""></div></br>
+    <textarea type="text" name="en" id="translation"><%= result_from_database %></textarea>
+			<div><input type="button" class="btn btn-secondary btn-block" value=" Reset " id="CButton" onclick="document.getElementById('translation').innerHTML = ''"></div>
 	</div>
-
-
-
-<div class="text-center p-1">
-	<font><a href="/"> yada yada! </a> </font>
-</div>
-		
-
 
 </form>
 </span>

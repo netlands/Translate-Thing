@@ -1,0 +1,21 @@
+{
+  "name": "translate-item",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx nodemon app.js -e js,ejs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "netlands",
+  "dependencies": {
+    "better-sqlite3": "^7.4.3",
+    "bootstrap": "^4.2.1",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "jquery": "^3.3.1",
+    "nodemon": "^2.0.12"
+  }
+}

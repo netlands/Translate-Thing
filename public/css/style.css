@@ -1,0 +1,28 @@
+
+
+input[type=button]{
+	background: gray;
+	/* width: 20%; */
+	/* font-size: 40px; */
+	font-weight: 500;
+	margin: 2%;
+	border-radius: 4px;
+}
+
+input[type=text]{
+	width: 90%;
+	font-size: 20px;
+	border: 2px inset black;
+	border-width: 1px;
+}
+
+body{
+	background-image: url("../img/background.jpg");
+	background-size: cover;
+	background-attachment: fixed;
+}
+
+form { 
+margin: 0 auto; 
+width:250px;
+}

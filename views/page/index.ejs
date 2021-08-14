@@ -1,82 +1,78 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<link rel="stylesheet" href="../css/style.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<meta charset="utf-8">
-<title>Translate Thing</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="description" content="Translate App">
-<meta name="author" content="netlands">
-<meta name="Keywords" content="translation">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<meta charset="utf-8">
+	<title>Translate Thing</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="Translate App">
+	<meta name="author" content="netlands">
+	<meta name="Keywords" content="translation">
 
- <!-- Bootstrap -->
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
+	<!-- Bootstrap -->
+	<link href="/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
+
 <body>
 
 
- <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
-      <div class="container">
-	  <script src="../js/script.js"></script>
-        <a class="navbar-brand" href="#">Translate Thing</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarResponsive">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item active">
-              <a class="nav-link" href="/">Home
-                <span class="sr-only">(current)</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/#glossary">Glossary</a>
- 
-          </ul>
-        </div>
-      </div>
-    </nav>
+	<!-- Navigation -->
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
+		<div class="container">
+			<script src="../js/script.js"></script>
+			<a class="navbar-brand" href="#">Translate Thing</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+				aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarResponsive">
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item active">
+						<a class="nav-link" href="/">Home
+							<span class="sr-only">(current)</span>
+						</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="/#glossary">Glossary</a>
+
+				</ul>
+			</div>
+		</div>
+	</nav>
 
 
-    
-<div class="container">
- 
-<div class="row justify-content-center p-5">
 
-<!-- <div class="card " style= "width: 22rem;">
+	<div class="container">
 
-<div class="card-body bg-transparent"> <-->
-	<span class="border p-5">
-<form name="my_form">
-	<div class="text-center pb-3">
-		<textarea type="text" name="en" id="original">material: silk&#13;&#10;color: red&#13;&#10;width: 120 cm&#13;&#10;yuki: 60 cm</textarea>
-		<div><input type="button" class="btn btn-secondary btn-block" value=" Translate " id="HButton" onclick=""></div></br>
-    <textarea type="text" name="en" id="translation"><%= result_from_database %></textarea>
-			<div><input type="button" class="btn btn-secondary btn-block" value=" Reset " id="CButton" onclick="document.getElementById('translation').innerHTML = ''"></div>
-	</div>
+		<div class="row justify-content-center p-5">
 
-</form>
-</span>
+			<span class="border p-5">
+				<form name="my_form">
+					<div class="text-center pb-3">
+						<textarea type="text" name="en"
+							id="original">material: silk&#13;&#10;color: red&#13;&#10;width: 120 cm&#13;&#10;yuki: 60 cm</textarea>
+						<div><input type="button" class="btn btn-secondary btn-block" value=" Translate " id="HButton" onclick="">
+						</div></br>
+						<textarea type="text" name="en" id="translation"><%= result_from_database %></textarea>
+						<div><input type="button" class="btn btn-secondary btn-block" value=" Reset " id="CButton"
+								onclick="document.getElementById('translation').innerHTML = ''"></div>
+					</div>
 
-<!--
-</div> 
+				</form>
+			</span>
 
-</div>  -->
+		</div> <!-- row -->
 
-</div> <!-- row -->
-
-</div> <!-- Container-->
+	</div> <!-- Container-->
 
 
-    <!-- Bootstrap core JavaScript -->
-   <script src="/js/jquery.min.js"></script>
-   <script src="/js/bootstrap.min.js"></script>
+	<!-- Bootstrap core JavaScript -->
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
 
 </body>
+
 </html>
-
-
-

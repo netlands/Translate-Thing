@@ -1,20 +1,16 @@
-
-
-
-
-textarea{
+textarea {
 	width: 598px;
 	height: 300px;
 	padding: 10px;
 }
 
-body{
+body {
 	background-image: url("../img/background.jpg");
 	background-size: cover;
 	background-attachment: fixed;
 }
 
-form { 
-margin: 0 auto; 
-width:600px;
+form {
+	margin: 0 auto;
+	width: 600px;
 }

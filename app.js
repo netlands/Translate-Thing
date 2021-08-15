@@ -34,6 +34,22 @@ app.get('/api/translate', function (req, res) {
   });
 });
 
+
+app.get('/api/addterm', function (req, res) {
+  //console.log(req.query);
+  addTerm(req.query.data);
+  res.json({
+    message: "term added"
+  });
+});
+
+function addTerm(termData) {
+  const stmt = db.prepare('INSERT INTO glossary (en,ja,furigana,romaji,ja2,en2,context,type,note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const info = stmt.run(termData);
+  console.log(info.changes); // => 1
+}
+
+
 function translateString(original) {
   content = original;
   // console.log(content);

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+	<meta charset="utf-8">
 	<link rel="stylesheet" href="../css/style.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-	<meta charset="utf-8">
 	<title>Translate Thing</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="description" content="Translate App">
@@ -46,33 +46,100 @@
 
 
 	<div class="container">
-
 		<div class="row justify-content-center p-5">
 
 			<span class="border p-5">
-				<form name="my_form">
+				<form class="translate" name="my_form">
 					<div class="text-center pb-3">
-						<div><textarea data-gramm="false" type="text" name="en"
+						<div><label class="sr-only" for="original">Original text</label><textarea data-gramm="false" type="text" name="en"
 							id="original">material: silk&#13;&#10;color: red&#13;&#10;width: 120 cm&#13;&#10;yuki: 60 cm</textarea></div>
 						<div><input type="button" class="btn btn-secondary btn-block" value=" Translate " id="HButton" onclick="">
 						</div><br/>
-						<div><textarea data-gramm="false" type="text" name="en" id="translation"><%= result_from_database %></textarea></div>
+						<div><label class="sr-only" for="translation">Translated text</label><textarea data-gramm="false" type="text" name="en" id="translation"><%= result_from_database %></textarea></div>
 						<div><input type="button" class="btn btn-secondary btn-block" value=" Reset " id="CButton"
 								onclick="document.getElementById('translation').innerHTML = ''"></div>
 					</div>
-
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-secondary btn-block" data-toggle="modal" data-target="#myModal">
+	Add New Term
+  </button>
 				</form>
 			</span>
 
 		</div> <!-- row -->
-
 	</div> <!-- Container-->
+
+
+
+  
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog .modal-lg" role="document">
+	  <div class="modal-content">
+		<div class="modal-header"><h4 class="modal-title" id="myModalLabel">Add New Term</h4>
+		  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		  
+		</div>
+		<div class="modal-body">
+			<form>
+				<div class="form-group">
+				  <label class="sr-only" for="en">English</label>
+				  <input type="text" class="form-control" id="en" placeholder="English" required="true">
+				</div>
+				<div class="form-group">
+					<label class="sr-only" for="ja">Japanese</label>
+					<input type="text" class="form-control" id="ja" placeholder="日本語" required="true">
+				  </div>
+				  <div class="form-group">
+					<label class="sr-only" for="furigana">Furigana</label>
+					<input type="text" class="form-control" id="furigana" placeholder="ふりがな" required="true">
+				  </div>
+				  <div class="form-group">
+					<label class="sr-only" for="romaji">Romaji</label>
+					<input type="text" class="form-control" id="romaji" placeholder="romaji">
+				  </div>
+				  <div class="form-group">
+					<label class="sr-only" for="ja2">Alternative Japanese</label>
+					<input type="text" class="form-control" id="ja2" placeholder="Alternative 日本語 (optional)">
+				  </div>				  
+				  <div class="form-group">
+					<label class="sr-only" for="en2">Alternative English</label>
+					<input type="text" class="form-control" id="en2" placeholder="Alternative English (optional)">
+				  </div>
+				  <div class="form-group">
+					<label class="sr-only" for="context">Context</label>
+					<input type="text" class="form-control" id="context" placeholder="Context (optional)">
+				  </div>
+				  <div class="form-group">
+					<label class="sr-only" for="type">Type</label>
+					<select class="form-control" id="type">
+						<option>Select a type</option>
+						<option>technique</option>
+						<option>category</option>
+						<option>property</option>
+						<option>material</option>
+						<option>part</option>
+					</select>
+				  </div>
+				  <div class="form-group">
+					<label class="sr-only" for="note">Note</label>
+					<input type="text" class="form-control" id="note" placeholder="Note (optional)">
+				  </div>
+			</form>	
+		</div>
+		<div class="modal-footer">
+		  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+		  <button type="button" class="btn btn-primary">Save changes</button>
+		</div>
+	  </div>
+	</div>
+  </div>
+
 
 
 	<!-- Bootstrap core JavaScript -->
 	<script src="/js/jquery.min.js"></script>
 	<script src="/js/bootstrap.min.js"></script>
-
 </body>
 
 </html>

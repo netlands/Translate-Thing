@@ -24,7 +24,7 @@ app.get('/', function (req, res) {
 });
 
 app.listen(3000, function () {
-  console.log('App listening on port 3000!');
+  console.log('App active on http://127.0.0.1:3000 and http://' + getLocalIp() + ':3000');
 });
 
 app.get('/api/translate', function (req, res) {
@@ -44,7 +44,7 @@ function translateString(original) {
   while ((result = regex.exec(content)) !== null) {
     let name = result[1].trim();
     let value = result[2].trim();
-    console.log(name, " : ", value);
+    // console.log(name, " : ", value);
 
     translation = "";
     const row = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE').get(name);
@@ -69,4 +69,17 @@ function translateString(original) {
 
   }
   return translations
+}
+
+
+function getLocalIp() {
+    const os = require('os');
+
+    for(let addresses of Object.values(os.networkInterfaces())) {
+        for(let add of addresses) {
+            if(add.address.startsWith('192.168.')) {
+                return add.address;
+            }
+        }
+    }
 }

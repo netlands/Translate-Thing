@@ -6,5 +6,10 @@ textarea {
 
 form.translate {
 	margin: 0 auto;
-	width: 50vw;
+	width: 90vw;
+}
+
+.form-control::placeholder { 
+	color: lightgray !important; 
+	opacity: 1; /* Firefox */
 }

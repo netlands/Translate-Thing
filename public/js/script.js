@@ -56,9 +56,8 @@ $(document).ready(function () {
 });
 
 
-
-
 $(document).ready(function(){
+
     $(document).on('show.bs.modal','#myModal', function () {
 		// Use try & catch for unsupported browser
 		var text = document.getElementById("original");
@@ -122,7 +121,10 @@ function updateTable(term) {
 				},
 			fixedHeader: true,
 			height: '400px',  
-			data:  rows	  }).render(document.getElementById("wrapper"));
+			data:  rows	}).render(document.getElementById("wrapper"));
+
+			grid.on('rowClick', (...args) => console.log('row: ' + JSON.stringify(args), args));
+
 
 		/* grid.updateConfig({
 			sort: true,
@@ -137,6 +139,13 @@ function updateTable(term) {
 		}).forceRender(); */
 	});
 
+}
 
+window.onload = function() {
+	console.log("Done loading!");
+	init();
+};
 
+function init() {
+	updateTable('');
 }

@@ -1,9 +1,9 @@
 # Translate Thing
-Simple Node.js calculator app with basic functions.
+Simple Node.js translation app using a SQLite based glossary/translation memory (tm). 
 
 ### Version
 
-1.1.0
+1.0.0
 
 
 ## Install Dependencies
@@ -15,6 +15,10 @@ npm install
 
 ## Run
 
+```bash
+npm start
+```
+or
 ```bash
 node app
 ```

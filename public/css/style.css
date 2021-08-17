@@ -17,7 +17,20 @@ div #glossary {
 	width: 90vw;
 }
 
-.form-control::placeholder { 
-	color: lightgray !important; 
-	opacity: 1; /* Firefox */
+.form-control::placeholder {
+	color: lightgray !important;
+	opacity: 1;
+	/* Firefox */
+}
+
+tr:hover td {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+td {
+	color: #999;
+}
+
+td:hover {
+	color: #000;
 }

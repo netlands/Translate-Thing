@@ -135,16 +135,20 @@ function translateString(original) {
 			value = values[i].trim();
 			const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? OR romaji = ? COLLATE NOCASE').get(value, value, value);
 			if (row2 !== undefined) {
-				if (newValues.includes('、' + row2.ja +'、')) {  } else {  newValues = newValues + row2.ja + "、"; }
+				if (newValues.includes('、' + row2.ja + '、')) {} else {
+					newValues = newValues + row2.ja + "、";
+				}
 			} else {
-				value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g,"$1 $2");
-				if (newValues.includes('、' + value +'、')) {  } else {  newValues = newValues + value + "、"; }
-			}	
+				value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
+				if (newValues.includes('、' + value + '、')) {} else {
+					newValues = newValues + value + "、";
+				}
+			}
 		}
-		const reg = /^([、\s]*)(.+?)([、\s]*)$/g;		
+		const reg = /^([、\s]*)(.+?)([、\s]*)$/g;
 		translation = translation + newValues.replace(reg, "$2");
 
-		translations = translations + translation + "\n";	
+		translations = translations + translation + "\n";
 	}
 
 	return translations

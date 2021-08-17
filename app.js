@@ -27,6 +27,7 @@ app.get('/', function (req, res) {
 // start server
 app.listen(3000, function () {
 	console.log('App active on http://127.0.0.1:3000 and http://' + getLocalIp() + ':3000');
+	console.log('You can minimize this window while using the application.');
 	open('http://127.0.0.1:3000');
 });
 

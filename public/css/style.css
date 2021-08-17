@@ -9,6 +9,14 @@ form.translate {
 	width: 90vw;
 }
 
+div #glossary {
+	background-color: white;
+	margin-left: 10px;
+	margin-right: 10px;
+	margin-bottom: 10px;
+	width: 90vw;
+}
+
 .form-control::placeholder { 
 	color: lightgray !important; 
 	opacity: 1; /* Firefox */

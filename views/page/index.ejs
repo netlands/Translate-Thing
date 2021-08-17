@@ -10,7 +10,7 @@
 	<meta name="author" content="netlands">
 	<meta name="Keywords" content="translation">
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="/js/jquery.min.js"></script>
 
 	<!-- Bootstrap -->
 	<link href="/css/bootstrap.min.css" rel="stylesheet">
@@ -24,7 +24,7 @@
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
 		<div class="container">
 			<script src="../js/script.js"></script>
-			<a class="navbar-brand" href="#">Translate Thing</a>
+			<a class="navbar-brand" href="#translate" data-toggle="collapse" data-target=".multi-collapse" >Translate Thing</a>
 			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
 				aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
@@ -37,46 +37,47 @@
 						</a>
 					</li-->
 					<li class="nav-item">
-						<a class="nav-link" data-toggle="collapse" href="#glossary">Glossary</a>
+						<a class="nav-link" data-toggle="collapse" data-target=".multi-collapse" href="#glossary">Glossary</a>
 
 				</ul>
 			</div>
 		</div>
 	</nav>
 
+	<div class="row">
+		<div class="col collapse multi-collapse container" id="glossary">
+			<div class="glossary">
+				</div><div id="wrapper"></div>
+				<input type="button" class="btn btn-secondary btn-block" value=" Update Table " onclick="updateTable('')">
+				<!-- $('.gridjs-input').val() -->
+				<button type="button" class="btn btn-secondary btn-block" data-toggle="modal"
+					data-target="#myModal">Add New Term</button>
+			</div>	
+		</div> <!-- Container-->
 
-	<div class="collapse container" id="glossary"><div id="wrapper"></div>
-	<input type="button" class="btn btn-secondary btn-block" value=" Update Table " onclick="updateTable('')"></div>
-	<!-- $('.gridjs-input').val() -->
-	<div class="collapse show container" id="home">
-		<div class="row justify-content-center pt-5 pb-5">
+		<div class="col collapse multi-collapse show container justify-content-center pt-5 pb-5" id="home">
+			<form class="translate" name="my_form">
+				<div><label class="sr-only" for="original">Original text</label><textarea data-gramm="false" type="text"
+						name="en"
+						id="original">type: fudangi, hitoe&#13;&#10;material: silk, cotton&#13;&#10;color: red&#13;&#10;width: 120 cm&#13;&#10;yuki: 60cm&#13;&#10;technique: shibori, tie-dye, bokashi</textarea>
+				</div>
+				<div class="pt-2"><input type="button" class="btn btn-secondary btn-block" value=" Translate "
+						id="HButton" onclick="">
+				</div>
+				<div class="pt-2"><label class="sr-only" for="translation">Translated text</label><textarea
+						data-gramm="false" type="text" name="en" id="translation"><%= result_from_database %></textarea>
+				</div>
+				<div class="pt-2"><input type="button" class="btn btn-secondary btn-block" value=" Reset " id="CButton"
+						onclick="document.getElementById('translation').innerHTML = ''"></div>
+
+				<!-- Button trigger modal -->
+				<div class="pt-2"><button type="button" class="btn btn-secondary btn-block" data-toggle="modal"
+						data-target="#myModal">Add New Term</button></div>
+			</form>
 
 
-				<form class="translate" name="my_form">
-
-					<div><label class="sr-only" for="original">Original text</label><textarea data-gramm="false"
-							type="text" name="en"
-							id="original">type: fudangi, hitoe&#13;&#10;material: silk, cotton&#13;&#10;color: red&#13;&#10;width: 120 cm&#13;&#10;yuki: 60 cm&#13;&#10;technique: shibori, tie-dye, bokashi</textarea>
-					</div>
-					<div class="pt-2"><input type="button" class="btn btn-secondary btn-block" value=" Translate "
-							id="HButton" onclick="">
-					</div>
-					<div class="pt-2"><label class="sr-only" for="translation">Translated text</label><textarea
-							data-gramm="false" type="text" name="en"
-							id="translation"><%= result_from_database %></textarea></div>
-					<div class="pt-2"><input type="button" class="btn btn-secondary btn-block" value=" Reset "
-							id="CButton" onclick="document.getElementById('translation').innerHTML = ''"></div>
-
-					<!-- Button trigger modal -->
-					<div class="pt-2"><button type="button" class="btn btn-secondary btn-block" data-toggle="modal"
-							data-target="#myModal">
-							Add New Term
-						</button></div>
-				</form>
-
-
-		</div> <!-- row -->
-	</div> <!-- Container-->
+		</div> <!-- Container-->
+	</div> <!-- row -->
 
 
 	<!-- Modal -->
@@ -128,6 +129,8 @@
 								<option>category</option>
 								<option>property</option>
 								<option>material</option>
+								<option>pattern</option>
+								<option>type</option>
 								<option>part</option>
 							</select>
 						</div>
@@ -148,7 +151,7 @@
 
 
 	<!-- Bootstrap core JavaScript -->
-	<script src="/js/jquery.min.js"></script>
+	<!-- script src="/js/jquery.min.js"></script-->
 	<script src="/js/bootstrap.min.js"></script>
 	<script src="/js/gridjs.umd.js"></script>
 

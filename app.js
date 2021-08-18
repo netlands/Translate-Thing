@@ -107,8 +107,13 @@ function addTerm(en, ja, furigana, romaji, ja2, en2, context, type, note) {
 	// console.log(info.changes); // => 1
 }
 
-
 function translateString(original) {
+	translation = translateProperties(original);
+	return translations;
+}
+
+
+function translateProperties(original) {
 	content = original;
 	// console.log(content);
 	var regex = new RegExp(/^([A-Za-z\-/ ]+): (.+)$/gm);
@@ -122,7 +127,7 @@ function translateString(original) {
 
 		translation = "";
 		propertyName = name;
-		const row = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE').get(name, name);
+		const row = db.prepare("SELECT * FROM glossary WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE)").get(name, name);
 		if (row !== undefined) {
 			if (row.type == "property") {
 				translation = row.ja;
@@ -140,12 +145,13 @@ function translateString(original) {
 		newValues = "、";
 		for (let i = 0; i < values.length; i++) {
 			value = values[i].trim();
-
-			value = getTranslation(value);
-			value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
-			if (newValues.includes('、' + value + '、')) {} else {
-				newValues = newValues + value + "、";
-			}
+			if (value.length > 0) {
+				value = getTranslation(value);
+				value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
+				if (newValues.includes('、' + value + '、')) {} else {
+					newValues = newValues + value + "、";
+				}
+			}	
 		}
 
 		const reg = /^([、\s]*)(.+?)([、\s]*)$/g;

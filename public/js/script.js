@@ -114,7 +114,6 @@ function updateTable(term) {
 
 			const grid = new gridjs.Grid({
 				sort: true,
-				resizable: true,
 				search: true,
 				pagination: {
 					limit: 50
@@ -125,7 +124,7 @@ function updateTable(term) {
 			}).render(document.getElementById("wrapper"));
 
 			grid.on('rowClick', (...args) => console.log('row: ' + JSON.stringify(args), args));
-
+			grid.on('cellClick', (...args) => console.log('cell: ' + JSON.stringify(args), args));
 
 			/* grid.updateConfig({
 				sort: true,

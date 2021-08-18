@@ -17,6 +17,8 @@ app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css'));
 app.use('/js', express.static(__dirname + '/node_modules/gridjs/dist')); // redirect gridjs
 app.use('/css', express.static(__dirname + '/node_modules/gridjs/dist/theme')); // redirect gridjs
 
+app.use('/favicon.ico', express.static(__dirname + '/public/img/favicon.ico'));
+
 // index page
 app.get('/', function (req, res) {
 	res.render('page/index', {

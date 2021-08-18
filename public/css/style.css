@@ -1,3 +1,8 @@
+body {
+	overflow-x: hidden;
+	overflow-y: scroll;
+  }
+
 textarea {
 	width: 100%;
 	height: 30vh;
@@ -7,6 +12,14 @@ textarea {
 form.translate {
 	margin: 0 auto;
 	width: 90vw;
+}
+
+a.nav-link.collapsed:before {
+  content: "Close ";
+}
+
+a.nav-link:not(.collapsed):before {
+    content: "Open ";
 }
 
 div #glossary {
@@ -21,6 +34,10 @@ div #glossary {
 	color: lightgray !important;
 	opacity: 1;
 	/* Firefox */
+}
+
+.navbar-dark .navbar-toggler {
+	border: none !important;
 }
 
 tr:hover td {

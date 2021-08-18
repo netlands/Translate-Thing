@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "npx nodemon app.js -e js,ejs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "test": "npx nodemon app.js -e js,ejs"
   },
   "keywords": [],
   "author": "",

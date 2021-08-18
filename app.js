@@ -52,7 +52,7 @@ app.get('/api/addterm', function (req, res) {
 
 app.get('/api/getterm', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
-	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? OR romaji = ?');
+	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE');
 	const row = stmt.get(req.query.term, req.query.term, req.query.term);
 
 	if (row === undefined) {
@@ -77,7 +77,7 @@ app.get('/api/getterm', function (req, res) {
 
 app.get('/api/getrows', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
-	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? OR romaji = ?');
+	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE');
 	const row = stmt.all(req.query.term, req.query.term, req.query.term);
 
 	if (row === undefined) {
@@ -121,39 +121,65 @@ function translateString(original) {
 		// console.log(name, " : ", value);
 
 		translation = "";
-		const row = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE').get(name);
+		propertyName = name;
+		const row = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE').get(name, name);
 		if (row !== undefined) {
 			if (row.type == "property") {
+				translation = row.ja;
+			} else {
 				translation = row.ja;
 			}
 		} else {
 			translation = name;
 		}
 		translation = translation + "：";
+		propertyName = row.ja;
+
 
 		const values = value.split(",");
 		newValues = "、";
 		for (let i = 0; i < values.length; i++) {
 			value = values[i].trim();
-			const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? OR romaji = ? COLLATE NOCASE').get(value, value, value);
-			if (row2 !== undefined) {
-				if (newValues.includes('、' + row2.ja + '、')) {} else {
-					newValues = newValues + row2.ja + "、";
-				}
-			} else {
-				value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
-				if (newValues.includes('、' + value + '、')) {} else {
-					newValues = newValues + value + "、";
-				}
+
+			value = getTranslation(value);
+			value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
+			if (newValues.includes('、' + value + '、')) {} else {
+				newValues = newValues + value + "、";
 			}
 		}
+
 		const reg = /^([、\s]*)(.+?)([、\s]*)$/g;
-		translation = translation + newValues.replace(reg, "$2");
+		newValues = newValues.replace(reg, "$2");
+
+		newValues = newValues.replace("（"+propertyName+"）","");
+
+		translation = translation + newValues
+
 
 		translations = translations + translation + "\n";
 	}
 
 	return translations
+}
+
+function getTranslation(term) {
+	if ((/(.+?)(\(.+?\))/).test(term)) {
+		terms = term.match(/(.+?)\((.+?)\)/);
+		part1 = getTranslation(terms[1].trim()); 
+		part2 = getTranslation(terms[2].trim()); 
+		if (part1 != part2) {
+			return part1 + "（" + part2 + "）"
+		} else {
+			return part1	
+		}
+	} else {
+	const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE').get(term, term, term);
+		if (row2 !== undefined) {
+			return row2.ja;
+		} else {
+			return term;
+		}
+	}	
 }
 
 

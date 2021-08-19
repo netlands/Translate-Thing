@@ -16,6 +16,8 @@ app.use('/js', express.static(__dirname + '/node_modules/jquery/dist')); // redi
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css')); // redirect CSS bootstrap
 app.use('/js', express.static(__dirname + '/node_modules/gridjs/dist')); // redirect gridjs
 app.use('/css', express.static(__dirname + '/node_modules/gridjs/dist/theme')); // redirect gridjs
+app.use('/js', express.static(__dirname + '/node_modules/bootstrap-select/dist/js')); // redirect bootstrap-select
+app.use('/css', express.static(__dirname + '/node_modules/bootstrap-select/dist/css')); // redirect bootstrap-select
 
 app.use('/favicon.ico', express.static(__dirname + '/public/img/favicon.ico'));
 

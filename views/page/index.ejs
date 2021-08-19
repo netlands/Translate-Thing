@@ -13,8 +13,9 @@
 	<script src="/js/jquery.min.js"></script>
 
 	<!-- Bootstrap -->
-	<link href="/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/css/bootstrap.min.css" rel="stylesheet" />
 	<link href="/css/mermaid.min.css" rel="stylesheet" />
+	<link href="/css/bootstrap-select.min.css" rel="stylesheet" />	
 </head>
 
 <body>
@@ -55,20 +56,40 @@
 			<!-- $('.gridjs-input').val() -->
 			<button type="button" class="btn btn-secondary btn-block" data-toggle="modal" data-target="#myModal">Add New
 				Term</button>
-		</div>
-	</div> <!-- Container-->
+		</div> <!-- Container-->
+	</div>
 
-	<div class="col collapse multi-collapse show container justify-content-center pt-5 pb-5" id="home">
+	<div class="col collapse multi-collapse show container justify-content-center pt-2 pb-5 form-group" id="home">
 		<form class="translate" name="my_form">
-			<div><label class="sr-only" for="original">Original text</label><textarea data-gramm="false" type="text"
+			<div class="input-group pb-2">
+				<label class="sr-only" for="titleAge">Age</label>
+				<select class="selectpicker form-control" multiple id="titleAge"></select>
+				<span class="input-group-addon"> </span>
+				<label class="sr-only" for="titleType">Type</label>
+				<select class="selectpicker form-control" multiple id="titleType"></select>
+				<span class="input-group-addon"> </span>
+				<label class="sr-only" for="titleColor">Colors</label>
+				<select class="selectpicker form-control" multiple id="titleColor"></select>	
+				<span class="input-group-addon"> </span>
+				<label class="sr-only" for="titleMaterial">Materials</label>
+				<select class="selectpicker form-control" multiple id="titleMaterial"></select>
+				<span class="input-group-addon"> </span>
+				<label class="sr-only" for="titlePattern">Patter/Design</label>				
+				<select class="selectpicker form-control" multiple id="titlePattern"></select>														
+			</div>
+			<div><label class="sr-only" for="original">Original text</label><textarea data-gramm="false"
 					name="en"
 					id="original">type: fudangi (casual wear), hitoe&#13;&#10;material: silk, cotton&#13;&#10;color: red&#13;&#10;length: 120 cm (mitake)&#13;&#10;yuki: 60cm&#13;&#10;technique: shibori, tie-dye, bokashi</textarea>
 			</div>
-			<div class="pt-2"><input type="button" class="btn btn-secondary btn-block" value=" Translate " id="HButton"
+			<div class="pt-2 pb-2"><input type="button" class="btn btn-secondary btn-block" value=" Translate " id="HButton"
 					onclick="">
 			</div>
+			<div class="input-group pt-2">
+				<label class="sr-only" for="titleTranslated">Title</label>
+				<input type="text" class="form-control" id="titleTranslated" />
+			</div>			
 			<div class="pt-2"><label class="sr-only" for="translation">Translated text</label><textarea
-					data-gramm="false" type="text" name="en" id="translation"><%= result_from_database %></textarea>
+					data-gramm="false" name="en" id="translation"><%= result_from_database %></textarea>
 			</div>
 			<div class="pt-2"><input type="button" class="btn btn-secondary btn-block" value=" Reset " id="CButton"
 					onclick="document.getElementById('translation').innerHTML = ''"></div>
@@ -80,8 +101,6 @@
 
 
 	</div> <!-- Container-->
-	</div> <!-- row -->
-
 
 	<!-- Modal -->
 	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -97,15 +116,15 @@
 					<form id="addTerm">
 						<div class="form-group">
 							<label class="sr-only" for="en">English</label>
-							<input type="text" class="form-control" id="en" placeholder="English" required="true">
+							<input type="text" class="form-control" id="en" placeholder="English" required>
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="ja">Japanese</label>
-							<input type="text" class="form-control" id="ja" placeholder="日本語" required="true">
+							<input type="text" class="form-control" id="ja" placeholder="日本語" required>
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="furigana">Furigana</label>
-							<input type="text" class="form-control" id="furigana" placeholder="ふりがな" required="true">
+							<input type="text" class="form-control" id="furigana" placeholder="ふりがな" required>
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="romaji">Romaji</label>
@@ -155,8 +174,9 @@
 
 	<!-- Bootstrap core JavaScript -->
 	<!-- script src="/js/jquery.min.js"></script-->
-	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/bootstrap.bundle.min.js"></script>
 	<script src="/js/gridjs.umd.js"></script>
+	<script src="/js/bootstrap-select.min.js"></script>	
 
 </body>
 

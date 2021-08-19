@@ -146,12 +146,14 @@ function updateTable(term) {
 			var This      = $(this);
 			var selectedD = $(this).val();
 			// console.log(selectedD);
-			var titleAge = $("#titleAge").val().toString().replace(","," ");
-			var titleType = $("#titleType").val().toString().replace(","," ");
-			var titleColor = $("#titleColor").val().toString().replace(","," ");
-			var titleMaterial = $("#titleMaterial").val().toString().replace(","," ");
-			var titlePattern = $("#titlePattern").val().toString().replace(","," ");
-			document.getElementById("titleTranslated").value = (titleAge + "　" + titleType + "　" + titleColor + "　" + titleMaterial + "　"  + titlePattern).replace(/^[　 ]*(.+?)[　 ]*$/,"$1");
+			var titleAge = $("#titleAge").val().toString().replaceAll(","," ");
+			var titleCategory = $("#titleCategory").val().toString().replaceAll(","," ");
+			var titleType = $("#titleType").val().toString().replaceAll(","," ");
+			var titleColor = $("#titleColor").val().toString().replaceAll(","," ");
+			var titleMaterial = $("#titleMaterial").val().toString().replaceAll(","," ");
+			var titlePattern = $("#titlePattern").val().toString().replaceAll(","," ");
+			var titleTranslated = (titleAge + "　" + titleCategory + "　" + titleType + "　" + titleColor + "　" + titleMaterial + "　"  + titlePattern).replace(/^[　 ]*(.+?)[　 ]*$/,"$1").replace(/(　){2,}/g,"　");
+			document.getElementById("titleTranslated").value = titleTranslated;
 		 });
 
 }
@@ -166,6 +168,7 @@ function init() {
 }
 
 function updateTitleFields(data) {
+	$('.selectpicker').children().remove().end();
 	for (let i = 0; i < data.length; i++) {
 		// console.log(i + " " + data[i].en + " " + data[i].type);
 		if (data[i].type !== undefined) {
@@ -179,6 +182,9 @@ function updateTitleFields(data) {
 				case "type":	
 					$('#titleType').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
 					break;
+				case "category":	
+					$('#titleCategory').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
+					break;	
 				case "pattern":	
 					$('#titlePattern').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
 					break;
@@ -190,6 +196,14 @@ function updateTitleFields(data) {
 			}
 		}			
 	}
+
+	$('#titleAge').selectpicker({noneSelectedText: 'Age'});  
+	$('#titleCategory').selectpicker({noneSelectedText: 'Category'});  
+	$('#titleType').selectpicker({noneSelectedText: 'Type'});  
+	$('#titleColor').selectpicker({noneSelectedText: 'Color(s)'});  
+	$('#titleMaterial').selectpicker({noneSelectedText: 'Material(s)'});  
+	$('#titlePattern').selectpicker({noneSelectedText: 'Pattern/Design'});  
+
 	$('.selectpicker').selectpicker('refresh');
 }
 

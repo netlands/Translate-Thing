@@ -139,8 +139,9 @@ function translateProperties(original) {
 		} else {
 			translation = name;
 		}
+		propertyName = translation;
 		translation = translation + "：";
-		propertyName = row.ja;
+		
 
 
 		const values = value.split(",");

@@ -18,6 +18,9 @@ app.use('/js', express.static(__dirname + '/node_modules/gridjs/dist')); // redi
 app.use('/css', express.static(__dirname + '/node_modules/gridjs/dist/theme')); // redirect gridjs
 app.use('/js', express.static(__dirname + '/node_modules/bootstrap-select/dist/js')); // redirect bootstrap-select
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap-select/dist/css')); // redirect bootstrap-select
+app.use('/js', express.static(__dirname + '/node_modules/wanakana/umd')); // redirect wanakana
+
+
 
 app.use('/favicon.ico', express.static(__dirname + '/public/img/favicon.ico'));
 
@@ -46,7 +49,7 @@ app.get('/api/translate', function (req, res) {
 
 app.get('/api/addterm', function (req, res) {
 	// console.log(req.query);
-	addTerm(req.query.en, req.query.ja, req.query.furigana, req.query.romaji, req.query.ja2, req.query.en2, req.query.context, req.query.type, req.query.note);
+	addTerm(req.query.en, req.query.ja, req.query.furigana, req.query.romaji, req.query.ja2, req.query.en2, req.query.context, req.query.type, req.query.priority, req.query.group, req.query.note);
 	res.json({
 		message: "term added"
 	});
@@ -54,7 +57,7 @@ app.get('/api/addterm', function (req, res) {
 
 app.get('/api/getterm', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
-	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE');
+	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority');
 	const row = stmt.get(req.query.term, req.query.term, req.query.term);
 
 	if (row === undefined) {
@@ -79,7 +82,7 @@ app.get('/api/getterm', function (req, res) {
 
 app.get('/api/getrows', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
-	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE');
+	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE  ORDER BY type, "group", priority ');
 	const row = stmt.all(req.query.term, req.query.term, req.query.term);
 
 	if (row === undefined) {
@@ -103,9 +106,9 @@ app.get('/api/getrows', function (req, res) {
 });
 
 
-function addTerm(en, ja, furigana, romaji, ja2, en2, context, type, note) {
-	const stmt = db.prepare('INSERT INTO glossary (en,ja,furigana,romaji,ja2,en2,context,type,note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-	const info = stmt.run(en, ja, furigana, romaji, ja2, en2, context, type, note);
+function addTerm(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note) {
+	const stmt = db.prepare('INSERT INTO glossary (en,ja,furigana,romaji,ja2,en2,context,type,priority,"group",note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+	const info = stmt.run(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note);
 	// console.log(info.changes); // => 1
 }
 
@@ -129,7 +132,7 @@ function translateProperties(original) {
 
 		translation = "";
 		propertyName = name;
-		const row = db.prepare("SELECT * FROM glossary WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE)").get(name, name);
+		const row = db.prepare("SELECT * FROM glossary WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE) ORDER BY priority").get(name, name);
 		if (row !== undefined) {
 			if (row.type == "property") {
 				translation = row.ja;
@@ -182,7 +185,7 @@ function getTranslation(term) {
 			return part1	
 		}
 	} else {
-	const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE').get(term, term, term);
+	const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority').get(term, term, term);
 		if (row2 !== undefined) {
 			return row2.ja;
 		} else {

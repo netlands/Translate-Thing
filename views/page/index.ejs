@@ -126,7 +126,7 @@
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="furigana">Furigana</label>
-							<input type="text" class="form-control" id="furigana" placeholder="ふりがな" required>
+							<input type="text" class="form-control" id="furigana" placeholder="ふりがな" required onkeyup="addRomaji(this.value);">
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="romaji">Romaji</label>
@@ -159,6 +159,14 @@
 							</select>
 						</div>
 						<div class="form-group">
+							<label class="sr-only" for="priority">Note</label>
+							<input type="number" class="form-control" id="priority" placeholder="Priority (optional)">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="group">Note</label>
+							<input type="text" class="form-control" id="group" placeholder="Group (optional)">
+						</div>						
+						<div class="form-group">
 							<label class="sr-only" for="note">Note</label>
 							<input type="text" class="form-control" id="note" placeholder="Note (optional)">
 						</div>
@@ -179,7 +187,9 @@
 	<script src="/js/bootstrap.bundle.min.js"></script>
 	<script src="/js/gridjs.umd.js"></script>
 	<script src="/js/bootstrap-select.min.js"></script>	
+	<script src="/js/wanakana.min.js"></script>	
 
+	<script src="/js/jquery.autoKana.js"></script>
 </body>
 
 </html>

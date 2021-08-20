@@ -25,7 +25,7 @@ $(document).ready(function () {
 	});
 
 	$("#TButton").on("click", function () {
-		var termdata = "'" + $("#en").val() + "','" + $("#ja").val() + "','" + $("#furigana").val() + "','" + $("#romaji").val() + "','" + $("#ja2").val() + "','" + $("#en2").val() + "','" + $("#context").val() + "','" + $("#type").val() + "','" + $("#note").val() + "'";
+		var termdata = "'" + $("#en").val() + "','" + $("#ja").val() + "','" + $("#furigana").val() + "','" + $("#romaji").val() + "','" + $("#ja2").val() + "','" + $("#en2").val() + "','" + $("#context").val() + "','" + $("#type").val() + "','" + $("#priority").val() + "','" + $("#group").val() + "','" + $("#note").val() + "'";
 		$.ajax({
 				url: "/api/addterm",
 				data: {
@@ -37,6 +37,8 @@ $(document).ready(function () {
 					en2: $("#en2").val(),
 					context: $("#context").val(),
 					type: $("#type").val(),
+					priority: $("#priority").val(),
+					group: $("#group").val(),										
 					note: $("#note").val()
 				},
 				success: function () {
@@ -165,7 +167,17 @@ window.onload = function () {
 
 function init() {
 	updateTable('');
+	var input = document.getElementById('furigana');
+	wanakana.bind(input);
+	$.fn.autoKana('#ja', '#furigana', {katakana:false});
 }
+
+function addRomaji(hiragana) {
+	document.getElementById('romaji').value = wanakana.toRomaji(hiragana);
+}
+
+
+
 
 function updateTitleFields(data) {
 	$('.selectpicker').children().remove().end();

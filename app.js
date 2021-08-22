@@ -121,6 +121,7 @@ function translateString(original) {
 function translateProperties(original) {
 	content = original;
 	// console.log(content);
+	// get all property name : value pairs
 	var regex = new RegExp(/^([A-Za-z\-/ ]+): (.+)$/gm);
 	var result, translation;
 	translations = "";
@@ -130,6 +131,17 @@ function translateProperties(original) {
 		let value = result[2].trim();
 		// console.log(name, " : ", value);
 
+		if (value.toLowerCase().includes("yuki:")) {
+			name = "yuki";
+			value = /(.+?):([^\)]+)/g.exec(value)[2].trim();
+		}
+
+		if (value.toLowerCase().includes("kata-haba:")) {
+			name = "kata-haba";
+			value = /(.+?):([^\)]+)/g.exec(value)[2].trim();
+		}
+
+		// translate property name 
 		translation = "";
 		propertyName = name;
 		const row = db.prepare("SELECT * FROM glossary WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE) ORDER BY priority").get(name, name);
@@ -146,7 +158,7 @@ function translateProperties(original) {
 		translation = translation + "：";
 		
 
-
+		// translate all property values 
 		const values = value.split(",");
 		newValues = "、";
 		for (let i = 0; i < values.length; i++) {

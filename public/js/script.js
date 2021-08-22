@@ -21,8 +21,17 @@ $(document).ready(function () {
 			.done(function (data) {
 				console.log("returned data:", data);
 				$('#translation').html(data.translation);
+
 			});
 	});
+
+
+function updateTitleValues(input) {
+	jQuery("#titleCategory option").filter(function(){
+		return $.trim($(this).text()) ==  'kimono'
+	}).prop('selected', true);
+	$('#titleCategory').selectpicker('refresh');
+}
 
 	$("#TButton").on("click", function () {
 		var termdata = "'" + $("#en").val() + "','" + $("#ja").val() + "','" + $("#furigana").val() + "','" + $("#romaji").val() + "','" + $("#ja2").val() + "','" + $("#en2").val() + "','" + $("#context").val() + "','" + $("#type").val() + "','" + $("#priority").val() + "','" + $("#group").val() + "','" + $("#note").val() + "'";

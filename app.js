@@ -81,7 +81,6 @@ app.get('/api/getterm', function (req, res) {
 });
 
 app.get('/api/getrows', function (req, res) {
-	// http://127.0.0.1:3000/api/getterm?term=silk
 	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE  ORDER BY type, "group", priority ');
 	const row = stmt.all(req.query.term, req.query.term, req.query.term);
 
@@ -114,13 +113,34 @@ function addTerm(en, ja, furigana, romaji, ja2, en2, context, type, priority, gr
 
 function translateString(original) {
 	translation = translateProperties(original);
-	return translations;
+	return translation;
 }
 
 
 function translateProperties(original) {
 	content = original;
 	// console.log(content);
+
+	// get category from the first line
+	category = "";
+	categoryJa = "";
+	try {
+	firstLine = /^([^\.]+?)\./g.exec(content)[0].trim();
+	const stmt = db.prepare('SELECT en, ja FROM glossary WHERE type = ? COLLATE NOCASE');
+	const rows = stmt.all("category");
+	for (let i = 0; i < rows.length; i++) {
+		console.log(rows[i].en);
+		const regex = new RegExp("\\b" + rows[i].en + "\\b","gi");
+		if (regex.test(firstLine)) {
+			category = rows[i].en;
+			categoryJa = rows[i].ja;
+			break;
+		}
+	}
+	} catch (error) {
+		
+	}
+
 	// get all property name : value pairs
 	var regex = new RegExp(/^([A-Za-z\-/ ]+): (.+)$/gm);
 	var result, translation;
@@ -183,7 +203,7 @@ function translateProperties(original) {
 		translations = translations + translation + "\n";
 	}
 
-	return translations
+	return categoryJa + "\n----------\n" + translations
 }
 
 function getTranslation(term) {

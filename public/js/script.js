@@ -1,4 +1,4 @@
-console.log("connected");
+// console.log("connected");
 
 $(document).ready(function () {
 	$('select').selectpicker();

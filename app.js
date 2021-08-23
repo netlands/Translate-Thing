@@ -55,7 +55,8 @@ app.get('/api/translate', function (req, res) {
 			type: typeJa,
 			color: colorJa,
 			material: materialJa,
-			pattern: patternJa
+			pattern: patternJa,
+			technique: techniqueJa
 		},
 		en: {
 			category: categoryEn,
@@ -63,7 +64,8 @@ app.get('/api/translate', function (req, res) {
 			type: typeEn,
 			color: colorEn,
 			material: materialEn,
-			pattern: patternEn
+			pattern: patternEn,
+			technique: techniqueEn
 		},
 		size: {
 			mitake: mitake,

@@ -3,6 +3,12 @@ var app = express();
 var path = require('path');
 const db = require('better-sqlite3')('tm.db');
 const open = require('open');
+const {
+	Agent
+} = require('http');
+const {
+	takeCoverage
+} = require('v8');
 
 // set the view engine to ejs
 app.set('view engine', 'ejs');
@@ -42,7 +48,31 @@ app.listen(3000, function () {
 app.get('/api/translate', function (req, res) {
 	//console.log(req.query);
 	res.json({
-		translation: translateString(req.query.original)
+		translation: translateString(req.query.original),
+		ja: {
+			category: categoryJa,
+			age: ageJa,
+			type: typeJa,
+			color: colorJa,
+			material: materialJa,
+			pattern: patternJa
+		},
+		en: {
+			category: categoryEn,
+			age: ageEn,
+			type: typeEn,
+			color: colorEn,
+			material: materialEn,
+			pattern: patternEn
+		},
+		size: {
+			mitake: mitake,
+			yuki: yuki,			
+			sodetake: sodetake,
+			katahaba: katahaba,
+			maehaba: maehaba,
+			ushirohaba: ushirohaba						
+		}
 	});
 });
 
@@ -122,24 +152,45 @@ function translateProperties(original) {
 	// console.log(content);
 
 	// get category from the first line
-	category = "";
+	categoryEn = "";
 	categoryJa = "";
 	try {
-	firstLine = /^([^\.]+?)\./g.exec(content)[0].trim();
-	const stmt = db.prepare('SELECT en, ja FROM glossary WHERE type = ? COLLATE NOCASE');
-	const rows = stmt.all("category");
-	for (let i = 0; i < rows.length; i++) {
-		console.log(rows[i].en);
-		const regex = new RegExp("\\b" + rows[i].en + "\\b","gi");
-		if (regex.test(firstLine)) {
-			category = rows[i].en;
-			categoryJa = rows[i].ja;
-			break;
+		firstLine = /^([^\.]+?)\./g.exec(content)[0].trim();
+		const stmt = db.prepare('SELECT en, ja FROM glossary WHERE type = ? COLLATE NOCASE');
+		const rows = stmt.all("category");
+		for (let i = 0; i < rows.length; i++) {
+			// console.log(rows[i].en);
+			const regex = new RegExp("\\b" + rows[i].en + "\\b", "gi");
+			if (regex.test(firstLine)) {
+				categoryEn = rows[i].en;
+				categoryJa = rows[i].ja;
+				break;
+			}
 		}
-	}
 	} catch (error) {
-		
+
 	}
+
+
+	ageEn = "";
+	ageJa = "";
+	typeEn = "";
+	typeJa = "";
+	colorEn = "";
+	colorJa = "";
+	materialEn = "";
+	materialJa = "";
+	patternEn = "";
+	patternJa = "";
+	techniqueEn = "";
+	techniqueJa = "";	
+	mitake = "";
+	yuki = "";
+	sodetake = "";
+	katahaba = "";
+	maehaba = "";
+	ushirohaba = "";
+
 
 	// get all property name : value pairs
 	var regex = new RegExp(/^([A-Za-z\-/ ]+): (.+)$/gm);
@@ -164,6 +215,7 @@ function translateProperties(original) {
 		// translate property name 
 		translation = "";
 		propertyName = name;
+		propertyEn = name;
 		const row = db.prepare("SELECT * FROM glossary WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE) ORDER BY priority").get(name, name);
 		if (row !== undefined) {
 			if (row.type == "property") {
@@ -174,9 +226,9 @@ function translateProperties(original) {
 		} else {
 			translation = name;
 		}
+
 		propertyName = translation;
 		translation = translation + "：";
-		
 
 		// translate all property values 
 		const values = value.split(",");
@@ -184,18 +236,67 @@ function translateProperties(original) {
 		for (let i = 0; i < values.length; i++) {
 			value = values[i].trim();
 			if (value.length > 0) {
-				value = getTranslation(value);
-				value = value.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
-				if (newValues.includes('、' + value + '、')) {} else {
-					newValues = newValues + value + "、";
+				valueJa = getTranslation(value);
+				valueJa = valueJa.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
+				if (newValues.includes('、' + valueJa + '、')) {} else {
+					newValues = newValues + valueJa + "、";
 				}
-			}	
+			}
 		}
 
 		const reg = /^([、\s]*)(.+?)([、\s]*)$/g;
 		newValues = newValues.replace(reg, "$2");
 
-		newValues = newValues.replace("（"+propertyName+"）","");
+		newValues = newValues.replace("（" + propertyName + "）", "");
+
+
+		switch (propertyEn) {
+			case "age":
+				ageEn = values.join(",");
+				ageJa = newValues
+				break;
+			case "type":
+				typeEn = values.join(",");
+				typeJa = newValues
+				break;
+			case "color":
+				colorEn = values.join(",");
+				colorJa = newValues
+				break;
+			case "material":
+				materialEn = values.join(",");
+				materialJa = newValues
+				break;
+			case "pattern":
+				patternEn = values.join(",");
+				patternJa = newValues
+				break;
+			case "technique":
+				techniqueEn = values.join(",");
+				techniqueJa = newValues
+				break;									
+		}
+
+		switch (propertyName) {
+			case "身丈":
+				mitake = newValues;
+				break;
+			case "裄丈":
+				yuki = newValues;
+				break;
+			case "肩幅":
+				katahaba = newValues;
+				break;
+			case "袖丈":
+				sodetake = newValues;
+				break;
+			case "前幅":
+				maehaba = newValues;
+				break;
+			case "後幅":
+				ushirohaba = newValues;
+				break;													
+		}
 
 		translation = translation + newValues
 
@@ -209,21 +310,21 @@ function translateProperties(original) {
 function getTranslation(term) {
 	if ((/(.+?)(\(.+?\))/).test(term)) {
 		terms = term.match(/(.+?)\((.+?)\)/);
-		part1 = getTranslation(terms[1].trim()); 
-		part2 = getTranslation(terms[2].trim()); 
+		part1 = getTranslation(terms[1].trim());
+		part2 = getTranslation(terms[2].trim());
 		if (part1 != part2) {
 			return part1 + "（" + part2 + "）"
 		} else {
-			return part1	
+			return part1
 		}
 	} else {
-	const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority').get(term, term, term);
+		const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority').get(term, term, term);
 		if (row2 !== undefined) {
 			return row2.ja;
 		} else {
 			return term;
 		}
-	}	
+	}
 }
 
 

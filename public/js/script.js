@@ -21,17 +21,18 @@ $(document).ready(function () {
 			.done(function (data) {
 				console.log("returned data:", data);
 				$('#translation').html(data.translation);
-
+				document.getElementById("titleTranslated").value = data.ja.category
+				;
 			});
 	});
 
 
-function updateTitleValues(input) {
-	jQuery("#titleCategory option").filter(function(){
-		return $.trim($(this).text()) ==  'kimono'
-	}).prop('selected', true);
-	$('#titleCategory').selectpicker('refresh');
-}
+	function updateTitleValues(input) {
+		jQuery("#titleCategory option").filter(function () {
+			return $.trim($(this).text()) == 'kimono'
+		}).prop('selected', true);
+		$('#titleCategory').selectpicker('refresh');
+	}
 
 	$("#TButton").on("click", function () {
 		var termdata = "'" + $("#en").val() + "','" + $("#ja").val() + "','" + $("#furigana").val() + "','" + $("#romaji").val() + "','" + $("#ja2").val() + "','" + $("#en2").val() + "','" + $("#context").val() + "','" + $("#type").val() + "','" + $("#priority").val() + "','" + $("#group").val() + "','" + $("#note").val() + "'";
@@ -47,7 +48,7 @@ function updateTitleValues(input) {
 					context: $("#context").val(),
 					type: $("#type").val(),
 					priority: $("#priority").val(),
-					group: $("#group").val(),										
+					group: $("#group").val(),
 					note: $("#note").val()
 				},
 				success: function () {
@@ -153,19 +154,19 @@ function updateTable(term) {
 			}).forceRender(); */
 		});
 
-		$(".translate .selectpicker").on("change", function(value){
-			var This      = $(this);
-			var selectedD = $(this).val();
-			// console.log(selectedD);
-			var titleAge = $("#titleAge").val().toString().replaceAll(","," ");
-			var titleCategory = $("#titleCategory").val().toString().replaceAll(","," ");
-			var titleType = $("#titleType").val().toString().replaceAll(","," ");
-			var titleColor = $("#titleColor").val().toString().replaceAll(","," ");
-			var titleMaterial = $("#titleMaterial").val().toString().replaceAll(","," ");
-			var titlePattern = $("#titlePattern").val().toString().replaceAll(","," ");
-			var titleTranslated = (titleAge + "　" + titleCategory + "　" + titleType + "　" + titleColor + "　" + titleMaterial + "　"  + titlePattern).replace(/^[　 ]*(.+?)[　 ]*$/,"$1").replace(/(　){2,}/g,"　");
-			document.getElementById("titleTranslated").value = titleTranslated;
-		 });
+	$(".translate .selectpicker").on("change", function (value) {
+		var This = $(this);
+		var selectedD = $(this).val();
+		// console.log(selectedD);
+		var titleAge = $("#titleAge").val().toString().replaceAll(",", " ");
+		var titleCategory = $("#titleCategory").val().toString().replaceAll(",", " ");
+		var titleType = $("#titleType").val().toString().replaceAll(",", " ");
+		var titleColor = $("#titleColor").val().toString().replaceAll(",", " ");
+		var titleMaterial = $("#titleMaterial").val().toString().replaceAll(",", " ");
+		var titlePattern = $("#titlePattern").val().toString().replaceAll(",", " ");
+		var titleTranslated = (titleAge + "　" + titleCategory + "　" + titleType + "　" + titleColor + "　" + titleMaterial + "　" + titlePattern).replace(/^[　 ]*(.+?)[　 ]*$/, "$1").replace(/(　){2,}/g, "　");
+		document.getElementById("titleTranslated").value = titleTranslated;
+	});
 
 }
 
@@ -178,7 +179,9 @@ function init() {
 	updateTable('');
 	var input = document.getElementById('furigana');
 	wanakana.bind(input);
-	$.fn.autoKana('#ja', '#furigana', {katakana:false});
+	$.fn.autoKana('#ja', '#furigana', {
+		katakana: false
+	});
 }
 
 function addRomaji(hiragana) {
@@ -193,37 +196,49 @@ function updateTitleFields(data) {
 	for (let i = 0; i < data.length; i++) {
 		// console.log(i + " " + data[i].en + " " + data[i].type);
 		if (data[i].type !== undefined) {
-			switch (data[i].type.toLowerCase()) {	
-				case "color":	
-					$('#titleColor').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
+			switch (data[i].type.toLowerCase()) {
+				case "color":
+					$('#titleColor').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
 					break;
-				case "material":	
-					$('#titleMaterial').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
-					break;				
-				case "type":	
-					$('#titleType').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
+				case "material":
+					$('#titleMaterial').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
 					break;
-				case "category":	
-					$('#titleCategory').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
-					break;	
-				case "pattern":	
-					$('#titlePattern').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
+				case "type":
+					$('#titleType').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
 					break;
-				case "age":	
-					$('#titleAge').append( '<option value="'+data[i].ja+'">'+data[i].en+'</option>' );
-					break;																							 
+				case "category":
+					$('#titleCategory').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
+					break;
+				case "pattern":
+					$('#titlePattern').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
+					break;
+				case "age":
+					$('#titleAge').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
+					break;
 				default:
 					// nothing to do
 			}
-		}			
+		}
 	}
 
-	$('#titleAge').selectpicker({noneSelectedText: 'Age'});  
-	$('#titleCategory').selectpicker({noneSelectedText: 'Category'});  
-	$('#titleType').selectpicker({noneSelectedText: 'Type'});  
-	$('#titleColor').selectpicker({noneSelectedText: 'Color(s)'});  
-	$('#titleMaterial').selectpicker({noneSelectedText: 'Material(s)'});  
-	$('#titlePattern').selectpicker({noneSelectedText: 'Pattern/Design'});  
+	$('#titleAge').selectpicker({
+		noneSelectedText: 'Age'
+	});
+	$('#titleCategory').selectpicker({
+		noneSelectedText: 'Category'
+	});
+	$('#titleType').selectpicker({
+		noneSelectedText: 'Type'
+	});
+	$('#titleColor').selectpicker({
+		noneSelectedText: 'Color(s)'
+	});
+	$('#titleMaterial').selectpicker({
+		noneSelectedText: 'Material(s)'
+	});
+	$('#titlePattern').selectpicker({
+		noneSelectedText: 'Pattern/Design'
+	});
 
 	$('.selectpicker').selectpicker('refresh');
 }

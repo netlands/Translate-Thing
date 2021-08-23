@@ -139,9 +139,9 @@ function updateTable(term) {
 	// console.log(term);
 	document.getElementById("wrapper").innerHTML = '';
 	$.ajax({
-			url: "/api/getrows",
+			url: "/api/gettable",
 			data: {
-				term: term
+				table: "glossary"
 			},
 			success: function () {
 				console.log('Successfully connected to the server');
@@ -152,7 +152,7 @@ function updateTable(term) {
 		})
 		.done(function (data) {
 			rows = data.rows;
-			// console.log(rows);
+			console.log(rows);
 			updateTitleFields(rows);
 
 			const grid = new gridjs.Grid({

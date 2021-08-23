@@ -112,6 +112,22 @@ app.get('/api/getterm', function (req, res) {
 	}
 });
 
+app.get('/api/gettable', function (req, res) {
+	const stmt = db.prepare('SELECT * FROM glossary ORDER BY type, "group", priority ');
+	const row = stmt.all();
+
+	if (row === undefined) {
+		res.json({
+			rows: "NO DATA"
+		});
+	} else {
+		res.json({
+			rows: row
+		});
+	}
+});
+
+
 app.get('/api/getrows', function (req, res) {
 	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE  ORDER BY type, "group", priority ');
 	const row = stmt.all(req.query.term, req.query.term, req.query.term);

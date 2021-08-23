@@ -1,15 +1,13 @@
 {
   "name": "translate-thing",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Small glossary based translation server using Node.js and SQLite.",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "test": "npx nodemon app.js -e js,ejs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "",
+  "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^7.4.3",
     "bootstrap": "^4.2.1",

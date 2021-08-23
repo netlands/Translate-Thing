@@ -52,20 +52,20 @@ app.get('/api/translate', function (req, res) {
 		ja: {
 			category: categoryJa,
 			age: ageJa,
-			type: typeJa,
-			color: colorJa,
-			material: materialJa,
-			pattern: patternJa,
-			technique: techniqueJa
+			type: typeJa.split("、"),
+			color: colorJa.split("、"),
+			material: materialJa.split("、"),
+			pattern: patternJa.split("、"),
+			technique: techniqueJa.split("、")
 		},
 		en: {
 			category: categoryEn,
 			age: ageEn,
-			type: typeEn,
-			color: colorEn,
-			material: materialEn,
-			pattern: patternEn,
-			technique: techniqueEn
+			type: typeEn.split(",").map(Function.prototype.call, String.prototype.trim),
+			color: colorEn.split(",").map(Function.prototype.call, String.prototype.trim),
+			material: materialEn.split(",").map(Function.prototype.call, String.prototype.trim),
+			pattern: patternEn.split(",").map(Function.prototype.call, String.prototype.trim),
+			technique: techniqueEn.split(",").map(Function.prototype.call, String.prototype.trim)
 		},
 		size: {
 			mitake: mitake,

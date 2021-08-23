@@ -21,17 +21,45 @@ $(document).ready(function () {
 			.done(function (data) {
 				console.log("returned data:", data);
 				$('#translation').html(data.translation);
-				document.getElementById("titleTranslated").value = data.ja.category
-				;
+				updateTitleValues(data)
 			});
 	});
 
 
-	function updateTitleValues(input) {
-		jQuery("#titleCategory option").filter(function () {
-			return $.trim($(this).text()) == 'kimono'
+	function updateTitleValues(data) {
+		
+		const reg = /^([　\s]*)(.+?)([　\s]*)$/g;
+		titleJapanese = data.ja.age + "　" + data.ja.category + "　" + data.ja.type.join(" ") + "　" + data.ja.color.join(" ") + "　" + data.ja.material.join(" ") + "　" + data.ja.pattern.join(" ");
+		titleJapanese = titleJapanese.replace(reg, "$2");
+		document.getElementById("titleTranslated").value = titleJapanese;
+
+		jQuery("#titleAge option").filter(function () {
+			return $.trim($(this).text()) == data.en.age
 		}).prop('selected', true);
-		$('#titleCategory').selectpicker('refresh');
+		jQuery("#titleCategory option").filter(function () {
+			return $.trim($(this).text()) == data.en.category
+		}).prop('selected', true);
+		data.en.type.forEach(function callbackFn(element) {
+			jQuery("#titleType option").filter(function () {
+				return $.trim($(this).text()) == element
+			}).prop('selected', true);
+		})
+		data.en.color.forEach(function callbackFn(element) {
+			jQuery("#titleColor option").filter(function () {
+				return $.trim($(this).text()) == element
+			}).prop('selected', true);
+		})			
+		data.en.material.forEach(function callbackFn(element) { 		
+			jQuery("#titleMaterial option").filter(function () {
+				return $.trim($(this).text()) == element
+			}).prop('selected', true);
+		})
+		data.en.pattern.forEach(function callbackFn(element) { 
+			jQuery("#titlePattern option").filter(function () {
+				return $.trim($(this).text()) == element
+			}).prop('selected', true);
+		})
+		$('.selectpicker').selectpicker('refresh');
 	}
 
 	$("#TButton").on("click", function () {
@@ -108,7 +136,7 @@ $(document).ready(function () {
 // [{"en":"silk","ja":"正絹","furigana":"","romaji":"shouken","ja2":"","en2":"","context":"","type":"material","note":""},{"en":"silk","ja":"絹","furigana":"きぬ","romaji":"kinu","ja2":"","en2":"","context":"","type":"material","note":""}]
 
 function updateTable(term) {
-	console.log(term);
+	// console.log(term);
 	document.getElementById("wrapper").innerHTML = '';
 	$.ajax({
 			url: "/api/getrows",

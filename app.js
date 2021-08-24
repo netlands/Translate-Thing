@@ -298,25 +298,31 @@ function translateProperties(original) {
 		switch (propertyName) {
 			case "身丈":
 				mitake = newValues;
+				newValues = newValues + kujirajaku(newValues);
 				break;
 			case "裄丈":
 				yuki = newValues;
+				newValues = newValues + kujirajaku(newValues);				
 				break;
 			case "肩幅":
 				katahaba = newValues;
+				newValues = newValues + kujirajaku(newValues);				
 				break;
 			case "袖丈":
 				sodetake = newValues;
+				newValues = newValues + kujirajaku(newValues);				
 				break;
 			case "前幅":
 				maehaba = newValues;
+				newValues = newValues + kujirajaku(newValues);				
 				break;
 			case "後幅":
 				ushirohaba = newValues;
+				newValues = newValues + kujirajaku(newValues);				
 				break;													
 		}
 
-		translation = translation + newValues
+		translation = translation + newValues;
 
 
 		translations = translations + translation + "\n";
@@ -324,6 +330,21 @@ function translateProperties(original) {
 
 	return categoryJa + "\n----------\n" + translations
 }
+
+function kujirajaku(inputValue) {
+	bu = "";
+	sun = "";
+	shaku = "";
+	inputValue = Number(inputValue.match(/([0-9\.]+)/g));
+	c = 37.87878788; // 1 shake = 37.87878788 cm
+	calculatedValue = Math.round(inputValue/c*100).toString(); // for rin (厘) devide by 1000
+	if (calculatedValue.substr(calculatedValue.length - 1) != "0") { bu = calculatedValue.substr(calculatedValue.length - 1) + " 分" };
+	if (calculatedValue.length > 1 && calculatedValue.substr(calculatedValue.length - 2,1) != "0") { sun = calculatedValue.substr(calculatedValue.length - 2,1) + " 寸" };
+	if (calculatedValue.length > 2) { shaku = calculatedValue.substring(0,calculatedValue.length - 2) + " 尺" };
+	// console.log(inputValue + "cm : " + calculatedValue + " : " + (shaku + " " + sun + " " + bu).trim());
+	return "（" + (shaku + " " + sun + " " + bu).trim() + "）"
+}
+
 
 function getTranslation(term) {
 	if ((/(.+?)(\(.+?\))/).test(term)) {

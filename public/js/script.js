@@ -29,7 +29,7 @@ $(document).ready(function () {
 	function updateTitleValues(data) {
 		
 		const reg = /^([　\s]*)(.+?)([　\s]*)$/g;
-		titleJapanese = data.ja.age + "　" + data.ja.category + "　" + data.ja.type.join(" ") + "　" + data.ja.color.join(" ") + "　" + data.ja.material.join(" ") + "　" + data.ja.pattern.join(" ");
+		titleJapanese = data.ja.age + "　" + data.ja.category + "　" + data.ja.type.join(" ") + "　" + data.ja.color.join(" ") + "　" + data.ja.material.join(" ") + "　" + data.ja.pattern.join(" ") + "　" + data.ja.technique.join(" ");
 		titleJapanese = titleJapanese.replace(reg, "$2");
 		document.getElementById("titleTranslated").value = titleJapanese;
 
@@ -59,6 +59,11 @@ $(document).ready(function () {
 				return $.trim($(this).text()) == element
 			}).prop('selected', true);
 		})
+		data.en.technique.forEach(function callbackFn(element) { 
+			jQuery("#titleTechnique option").filter(function () {
+				return $.trim($(this).text()) == element
+			}).prop('selected', true);
+		})		
 		$('.selectpicker').selectpicker('refresh');
 	}
 
@@ -192,7 +197,8 @@ function updateTable(term) {
 		var titleColor = $("#titleColor").val().toString().replaceAll(",", " ");
 		var titleMaterial = $("#titleMaterial").val().toString().replaceAll(",", " ");
 		var titlePattern = $("#titlePattern").val().toString().replaceAll(",", " ");
-		var titleTranslated = (titleAge + "　" + titleCategory + "　" + titleType + "　" + titleColor + "　" + titleMaterial + "　" + titlePattern).replace(/^[　 ]*(.+?)[　 ]*$/, "$1").replace(/(　){2,}/g, "　");
+		var titleTechnique = $("#titleTechnique").val().toString().replaceAll(",", " ");
+		var titleTranslated = (titleAge + "　" + titleCategory + "　" + titleType + "　" + titleColor + "　" + titleMaterial + "　" + titlePattern + "　" + titleTechnique).replace(/^[　 ]*(.+?)[　 ]*$/, "$1").replace(/(　){2,}/g, "　");
 		document.getElementById("titleTranslated").value = titleTranslated;
 	});
 
@@ -240,6 +246,9 @@ function updateTitleFields(data) {
 				case "pattern":
 					$('#titlePattern').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
 					break;
+				case "technique":
+					$('#titleTechnique').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
+					break;					
 				case "age":
 					$('#titleAge').append('<option value="' + data[i].ja + '">' + data[i].en + '</option>');
 					break;
@@ -267,7 +276,9 @@ function updateTitleFields(data) {
 	$('#titlePattern').selectpicker({
 		noneSelectedText: 'Pattern/Design'
 	});
-
+	$('#titleTechnique').selectpicker({
+		noneSelectedText: 'Technique(s)'
+	});
 	$('.selectpicker').selectpicker('refresh');
 }
 

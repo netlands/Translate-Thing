@@ -87,6 +87,14 @@ app.get('/api/addterm', function (req, res) {
 	});
 });
 
+app.get('/api/updateterm', function (req, res) {
+	// console.log(req.query);
+	updateTerm(req.query.en, req.query.ja, req.query.furigana, req.query.romaji, req.query.ja2, req.query.en2, req.query.context, req.query.type, req.query.priority, req.query.group, req.query.note, req.query.id);
+	res.json({
+		message: "term updated"
+	});
+});
+
 app.get('/api/getterm', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
 	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority');
@@ -157,6 +165,12 @@ function addTerm(en, ja, furigana, romaji, ja2, en2, context, type, priority, gr
 	const stmt = db.prepare('INSERT INTO glossary (en,ja,furigana,romaji,ja2,en2,context,type,priority,"group",note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 	const info = stmt.run(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note);
 	// console.log(info.changes); // => 1
+}
+
+function updateTerm(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note, id) {
+	const stmt = db.prepare('UPDATE glossary SET en = ?, ja = ?, furigana = ?, romaji = ?, ja2 = ?, en2 = ?, context = ?, type = ?, priority = ?, "group" = ?, note = ? WHERE id = ? '); 
+	const updates = stmt.run(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note, id);
+	// console.log(updates.changes); // => 1
 }
 
 function translateString(original) {

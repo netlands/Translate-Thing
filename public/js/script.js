@@ -1,7 +1,4 @@
-
 // console.log("connected");
-
-const { type } = require("jquery");
 
 $(document).ready(function () {
 	$('select').selectpicker();
@@ -102,6 +99,41 @@ $(document).ready(function () {
 				};
 			});
 	});
+
+	$("#UButton").on("click", function () {
+		$.ajax({
+				url: "/api/updateterm",
+				data: {
+					en: $("#enx").val(),
+					ja: $("#jax").val(),
+					furigana: $("#furiganax").val(),
+					romaji: $("#romajix").val(),
+					ja2: $("#ja2x").val(),
+					en2: $("#en2x").val(),
+					context: $("#contextx").val(),
+					type: $("#typex").val(),
+					priority: $("#priorityx").val(),
+					group: $("#groupx").val(),
+					note: $("#notex").val(),
+					id: $("#idx").val() 
+				},
+				success: function () {
+					console.log('Successfully connected to the server');
+				},
+				error: function () {
+					console.log('Something went wrong');
+				}
+			})
+			.done(function (data) {
+				console.log("returned data:", data);
+				if (data.message = "term updated") {
+					$('#myModalx').modal('hide');
+					$('#editTerm')[0].reset();
+				};
+			});
+	});
+
+
 
 });
 
@@ -221,8 +253,8 @@ function init() {
 	});
 }
 
-function addRomaji(hiragana) {
-	document.getElementById('romaji').value = wanakana.toRomaji(hiragana);
+function addRomaji(hiragana,targetId) {
+	document.getElementById(targetId).value = wanakana.toRomaji(hiragana);
 }
 
 
@@ -318,22 +350,18 @@ function getFields(data) {
 	id = cells[11]["data"];
 	console.log(id);
 
-$("#en").value = en;
-$("#ja").value = ja;
-$("#furigana").value = furigana;
-$("#romaji").value = romaji;
-$("#ja2").value = ja2;
-$("#en2").value = en2;
-$("#context").value = context;
-$("#type").value = typeStr;
-$("#priority").value = priority;
-$("#group").value = group;
-$("#note").value = note;
-$("#id").value = id;
+	document.getElementById("enx").value = en;
+	document.getElementById("jax").value = ja;
+	document.getElementById("furiganax").value = furigana;
+	document.getElementById("romajix").value = romaji;
+	document.getElementById("ja2x").value = ja2;
+	document.getElementById("en2x").value = en2;
+	document.getElementById("contextx").value = context;
+	document.getElementById("typex").value = typeStr;
+	document.getElementById("priorityx").value = priority;
+	document.getElementById("groupx").value = group;
+	document.getElementById("notex").value = note;
+	document.getElementById("idx").value = id;
+
+	$('#myModalx').modal('show'); 
 }
-
-
-/*
-const stmt = db.prepare('UPDATE glossary SET en = ?, ja = ?, furigana = ?, romaji = ?, ja2 = ?, en2 = ?, context = ?, type = ?, priority = ?, group = ?, note = ? WHERE id = ? '); 
-const updates = stmt.run(enNew, jaNew, furiganaNew, romajiNew, ja2New, en2New, contextNew, typeNew, priorityNew, groupNew, noteNew, id);
-*/

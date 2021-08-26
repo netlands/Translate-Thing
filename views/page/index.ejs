@@ -116,7 +116,7 @@
 
 				</div>
 				<div class="modal-body">
-					<form id="addTerm">
+					<form id="editTerm">
 						<div class="form-group">
 							<label class="sr-only" for="en">English</label>
 							<input type="text" class="form-control" id="en" placeholder="English" required>
@@ -128,7 +128,7 @@
 						<div class="form-group">
 							<label class="sr-only" for="furigana">Furigana</label>
 							<input type="text" class="form-control" id="furigana" placeholder="ふりがな" required
-								onkeyup="addRomaji(this.value);">
+								onkeyup="addRomaji(this.value,'romaji');">
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="romaji">Romaji</label>
@@ -163,11 +163,11 @@
 							</select>
 						</div>
 						<div class="form-group">
-							<label class="sr-only" for="priority">Note</label>
+							<label class="sr-only" for="priority">Priority</label>
 							<input type="number" class="form-control" id="priority" placeholder="Priority (optional)">
 						</div>
 						<div class="form-group">
-							<label class="sr-only" for="group">Note</label>
+							<label class="sr-only" for="group">Group</label>
 							<input type="text" class="form-control" id="group" placeholder="Group (optional)">
 						</div>
 						<div class="form-group">
@@ -187,6 +187,91 @@
 			</div>
 		</div>
 	</div>
+
+
+	<!-- Modal -->
+	<div class="modal fade" id="myModalx" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog .modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="myModalLabel">Edit Term</h4>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+							aria-hidden="true">&times;</span></button>
+
+				</div>
+				<div class="modal-body">
+					<form id="updateTerm">
+						<div class="form-group">
+							<label class="sr-only" for="enx">English</label>
+							<input type="text" class="form-control" id="enx" placeholder="English" required>
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="jax">Japanese</label>
+							<input type="text" class="form-control" id="jax" placeholder="日本語" required>
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="furiganax">Furigana</label>
+							<input type="text" class="form-control" id="furiganax" placeholder="ふりがな" required
+								onkeyup="addRomaji(this.value,'romajix');">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="romajix">Romaji</label>
+							<input type="text" class="form-control" id="romajix" placeholder="romaji">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="ja2x">Alternative Japanese</label>
+							<input type="text" class="form-control" id="ja2x" placeholder="Alternative 日本語 (optional)">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="en2x">Alternative English</label>
+							<input type="text" class="form-control" id="en2x"
+								placeholder="Alternative English (optional)">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="contextx">Context</label>
+							<input type="text" class="form-control" id="contextx" placeholder="Context (optional)">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="typex">Type</label>
+							<select class="form-control" id="typex">
+								<option selected disabled>Select a type</option>
+								<option>technique</option>
+								<option>category</option>
+								<option>property</option>
+								<option>material</option>
+								<option>pattern</option>
+								<option>type</option>
+								<option>part</option>
+								<option>tool</option>
+								<option>color</option>								
+							</select>
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="priorityx">Priority</label>
+							<input type="number" class="form-control" id="priorityx" placeholder="Priority (optional)">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="groupx">Group</label>
+							<input type="text" class="form-control" id="groupx" placeholder="Group (optional)">
+						</div>
+						<div class="form-group">
+							<label class="sr-only" for="notex">Note</label>
+							<input type="text" class="form-control" id="notex" placeholder="Note (optional)">
+						</div>
+
+
+							<input type="hidden" class="form-control" id="idx">
+						
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" id="UButton">Update Term</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 
 
 

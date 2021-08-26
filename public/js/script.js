@@ -1,4 +1,7 @@
+
 // console.log("connected");
+
+const { type } = require("jquery");
 
 $(document).ready(function () {
 	$('select').selectpicker();
@@ -142,7 +145,7 @@ $(document).ready(function () {
 
 function updateTable(term) {
 	// console.log(term);
-	document.getElementById("wrapper").innerHTML = '';
+	document.getElementById("table").innerHTML = '';
 	$.ajax({
 			url: "/api/gettable",
 			data: {
@@ -157,7 +160,7 @@ function updateTable(term) {
 		})
 		.done(function (data) {
 			rows = data.rows;
-			console.log(rows);
+			// console.log(rows);
 			updateTitleFields(rows);
 
 			const grid = new gridjs.Grid({
@@ -167,27 +170,27 @@ function updateTable(term) {
 					limit: 50
 				},
 				fixedHeader: true,
-				height: '400px',
-				data: rows
-			}).render(document.getElementById("wrapper"));
-
-			grid.on('rowClick', (...args) => console.log('row: ' + JSON.stringify(args), args));
-			grid.on('cellClick', (...args) => console.log('cell: ' + JSON.stringify(args), args));
-
-			/* grid.updateConfig({
-				sort: true,
-				resizable: true,
-				search: true,
-				pagination: {
-					limit: 50
-					},
-				fixedHeader: true,
 				height: '400px',		
 				data: rows
-			}).forceRender(); */
+			}).render(document.getElementById("table"));
+
+			//grid.on('rowClick', (...args) => console.log('row: ' + JSON.stringify(args), args));
+			//grid.on('cellClick', (...args) => console.log('cell: ' + JSON.stringify(args), args));
+			grid.on('rowClick', (...args) =>  getFields(JSON.stringify(args)));
+
+
+			// hide id field
+			grid.updateConfig({			
+				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+					{ name : "id",
+					hidden: true },
+				],
+				height: '680px'
+			}).forceRender();
+
 		});
 
-	$(".translate .selectpicker").on("change", function (value) {
+		$(".translate .selectpicker").on("change", function (value) {
 		var This = $(this);
 		var selectedD = $(this).val();
 		// console.log(selectedD);
@@ -293,7 +296,44 @@ for (let i = 0; i < cells.length; i++) {
 	result = result + "\n" + cells[i]["data"]
 }
 alert(result); 
+*/
 
-const stmt = db.prepare('UPDATE glossary SET en = ?, ja = ?, furigana = ?, romaji = ?, ja2 = ?, en2 = ?, context = ?, type = ?, note = ? WHERE en = ? AND ja = ? AND furigana = ? AND romaji = ? AND ja2 = ? AND en2 = ? AND context = ? AND type = ? AND note = ?'); 
-const updates = stmt.run(enNew, jaNew, furiganaNew, romajiNew, ja2New, en2New, contextNew, typeNew, noteNew, enOld, jaOld, furiganaOld, romajiOld, ja2Old, en2Old, contextOld, typeOld, noteOld);
+
+
+function getFields(data) {
+	// console.log(data);
+	row = JSON.parse(data);
+	cells = row[1]["_cells"];
+	en = cells[0]["data"];
+	ja = cells[1]["data"];
+	furigana = cells[2]["data"];
+	romaji = cells[3]["data"];
+	ja2 = cells[4]["data"];
+	en2 = cells[5]["data"]; 
+	context = cells[6]["data"]; 
+	typeStr = cells[7]["data"]; 
+	priority = cells[8]["data"]; 
+	group = cells[9]["data"]; 
+	note = cells[10]["data"]; 
+	id = cells[11]["data"];
+	console.log(id);
+
+$("#en").value = en;
+$("#ja").value = ja;
+$("#furigana").value = furigana;
+$("#romaji").value = romaji;
+$("#ja2").value = ja2;
+$("#en2").value = en2;
+$("#context").value = context;
+$("#type").value = typeStr;
+$("#priority").value = priority;
+$("#group").value = group;
+$("#note").value = note;
+$("#id").value = id;
+}
+
+
+/*
+const stmt = db.prepare('UPDATE glossary SET en = ?, ja = ?, furigana = ?, romaji = ?, ja2 = ?, en2 = ?, context = ?, type = ?, priority = ?, group = ?, note = ? WHERE id = ? '); 
+const updates = stmt.run(enNew, jaNew, furiganaNew, romajiNew, ja2New, en2New, contextNew, typeNew, priorityNew, groupNew, noteNew, id);
 */

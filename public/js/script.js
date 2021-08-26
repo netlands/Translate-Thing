@@ -217,7 +217,7 @@ function updateTable(term) {
 					{ name : "id",
 					hidden: true },
 				],
-				height: '680px'
+				height: '500px'
 			}).forceRender();
 
 		});

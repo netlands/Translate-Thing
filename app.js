@@ -270,6 +270,7 @@ function translateProperties(original) {
 			if (value.length > 0) {
 				valueJa = getTranslation(value);
 				valueJa = valueJa.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
+				valueJa = valueJa.replace(/([\d]+?(?: )?(?:kg|cm|g|m)?)\s*?[xX×\*]\s*?([\d]+)/g, "$1 × $2"); // ×
 				if (newValues.includes('、' + valueJa + '、')) {} else {
 					newValues = newValues + valueJa + "、";
 				}

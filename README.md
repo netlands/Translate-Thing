@@ -3,7 +3,7 @@ Simple Node.js translation app using a SQLite based glossary/translation memory 
 
 ### Version
 
-1.0.0
+1.0.1
 
 
 ## Install Dependencies

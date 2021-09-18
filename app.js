@@ -350,7 +350,12 @@ function kujirajaku(inputValue) {
 	bu = "";
 	sun = "";
 	shaku = "";
+	let re = inputValue.match(/([0-9\.]+\s*)(mm|cm|m)/);
+	inputUnit = re[2];
 	inputValue = Number(inputValue.match(/([0-9\.]+)/g));
+	if (inputUnit == "m" ) { 
+		inputValue = inputValue * 100 
+	};
 	c = 37.87878788; // 1 shake = 37.87878788 cm
 	calculatedValue = Math.round(inputValue/c*100).toString(); // for rin (厘) devide by 1000
 	if (calculatedValue.substr(calculatedValue.length - 1) != "0") { bu = calculatedValue.substr(calculatedValue.length - 1) + " 分" };

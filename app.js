@@ -325,7 +325,12 @@ function translateProperties(original) {
 				break;
 			case "袖丈":
 				sodetake = newValues;
-				newValues = newValues + kujirajaku(newValues);				
+				// standard size check: 49 cm = 1 尺 3 寸 = 49.2 cm
+				if (newValues.startsWith('49 ', 3)) {
+					newValues = newValues + '（1 尺 3 寸）';
+				} else {
+					newValues = newValues + kujirajaku(newValues);
+				}				
 				break;
 			case "前幅":
 				maehaba = newValues;

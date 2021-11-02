@@ -96,8 +96,10 @@ $(document).ready(function () {
 				if (data.message = "term added") {
 					$('#myModal').modal('hide');
 					$('#addTerm')[0].reset();
+					updateTable("");
 				};
 			});
+
 	});
 
 	$("#UButton").on("click", function () {
@@ -129,11 +131,10 @@ $(document).ready(function () {
 				if (data.message = "term updated") {
 					$('#myModalx').modal('hide');
 					$('#editTerm')[0].reset();
+					updateTable("");
 				};
 			});
 	});
-
-
 
 });
 
@@ -176,7 +177,13 @@ $(document).ready(function () {
 // [{"en":"silk","ja":"正絹","furigana":"","romaji":"shouken","ja2":"","en2":"","context":"","type":"material","note":""},{"en":"silk","ja":"絹","furigana":"きぬ","romaji":"kinu","ja2":"","en2":"","context":"","type":"material","note":""}]
 
 function updateTable(term) {
-	// console.log(term);
+	searchTerm = term; 
+	try {
+		searchTerm = document.querySelector(".gridjs-search-input").value;
+	} catch {
+		// searchTerm = "";
+	}	
+	// console.log(searchTerm);
 	document.getElementById("table").innerHTML = '';
 	$.ajax({
 			url: "/api/gettable",
@@ -197,7 +204,10 @@ function updateTable(term) {
 
 			const grid = new gridjs.Grid({
 				sort: true,
-				search: true,
+				search: {
+					enabled: true,
+					keyword: searchTerm
+				},	
 				pagination: {
 					limit: 50
 				},

@@ -71,6 +71,7 @@ app.get('/api/translate', function (req, res) {
 			mitake: mitake,
 			yuki: yuki,			
 			sodetake: sodetake,
+			sodehaba: sodehaba,
 			katahaba: katahaba,
 			maehaba: maehaba,
 			ushirohaba: ushirohaba						
@@ -219,6 +220,7 @@ function translateProperties(original) {
 	mitake = "";
 	yuki = "";
 	sodetake = "";
+	sodehaba = "";
 	katahaba = "";
 	maehaba = "";
 	ushirohaba = "";
@@ -312,11 +314,29 @@ function translateProperties(original) {
 
 		switch (propertyName) {
 			case "身丈":
-				mitake = newValues;
+				mitake = newValues;	
+				note = "";		
+				if ((/(.+?)([\(（].+?[\)）])/).test(newValues)) {
+					parts = newValues.match(/(.+?)([\(（].+?[\)）])/);
+					newValues = getTranslation(parts[1].trim());
+					note = getTranslation(parts[2].trim());
+					if (note.includes("shoulder") || note.includes("肩から")) {
+						note = "（肩から）";
+					} else if (note.includes("back") || note.includes("背から")) {
+						note = "（背から）";
+					} else {
+						note = "";
+					}
+				}
+				translation = translation.replace("：",note+"：")
 				newValues = newValues + kujirajaku(newValues);
 				break;
 			case "裄丈":
 				yuki = newValues;
+				newValues = newValues + kujirajaku(newValues);				
+				break;
+			case "袖幅":
+				sodehaba = newValues;
 				newValues = newValues + kujirajaku(newValues);				
 				break;
 			case "肩幅":

@@ -25,7 +25,6 @@ $(document).ready(function () {
 			});
 	});
 
-
 	function updateTitleValues(data) {
 		
 		const reg = /^([　\s]*)(.+?)([　\s]*)$/g;
@@ -172,6 +171,8 @@ $(document).ready(function () {
 		$("#addTerm").trigger("reset"); // Reset form
 	});
 
+	fillTemplate();
+
 });
 
 // [{"en":"silk","ja":"正絹","furigana":"","romaji":"shouken","ja2":"","en2":"","context":"","type":"material","note":""},{"en":"silk","ja":"絹","furigana":"きぬ","romaji":"kinu","ja2":"","en2":"","context":"","type":"material","note":""}]
@@ -267,6 +268,25 @@ function addRomaji(hiragana,targetId) {
 	document.getElementById(targetId).value = wanakana.toRomaji(hiragana);
 }
 
+function fillTemplate() {
+	$.ajax({
+		url: "/api/template",
+		data: {
+			msg : ""
+		},
+		success: function () {
+			console.log('Successfully connected to the server');
+		},
+		error: function () {
+			console.log('Something went wrong');
+		}
+	})
+	.done(function (data) {
+		console.log("returned data:", data);
+		// $('#original').val(data[Object.keys(data)[0]]); // if key is unknown
+		$('#original').val(data.template);
+	});
+}
 
 
 

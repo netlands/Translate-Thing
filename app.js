@@ -83,6 +83,24 @@ app.get('/api/translate', function (req, res) {
 	});
 });
 
+const fs = require('fs');
+
+app.get('/api/template', function (req, res) {
+	//console.log(req.query);
+	const filePath = 'template.txt';
+	var fileContent = "";
+	try {
+	// Read the file synchronously
+	fileContent = fs.readFileSync(filePath, 'utf-8');
+	} catch (error) {
+	console.error('Error reading file:', error);
+	}
+
+	res.json({
+		template: fileContent
+	});
+});
+
 
 app.get('/api/addterm', function (req, res) {
 	// console.log(req.query);

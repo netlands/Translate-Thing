@@ -56,7 +56,9 @@ app.get('/api/translate', function (req, res) {
 			color: colorJa.split("、"),
 			material: materialJa.split("、"),
 			pattern: patternJa.split("、"),
-			technique: techniqueJa.split("、")
+			technique: techniqueJa.split("、"),
+			kamon: kamonJa.split("、"),
+			rakkan: rakkanJa.split("、")						
 		},
 		en: {
 			category: categoryEn,
@@ -65,7 +67,9 @@ app.get('/api/translate', function (req, res) {
 			color: colorEn.split(",").map(Function.prototype.call, String.prototype.trim),
 			material: materialEn.split(",").map(Function.prototype.call, String.prototype.trim),
 			pattern: patternEn.split(",").map(Function.prototype.call, String.prototype.trim),
-			technique: techniqueEn.split(",").map(Function.prototype.call, String.prototype.trim)
+			technique: techniqueEn.split(",").map(Function.prototype.call, String.prototype.trim),
+			kamon: kamonEn.split(",").map(Function.prototype.call, String.prototype.trim),
+			rakkan: rakkanEn.split(",").map(Function.prototype.call, String.prototype.trim)						
 		},
 		size: {
 			mitake: mitake,
@@ -216,7 +220,11 @@ function translateProperties(original) {
 	patternEn = "";
 	patternJa = "";
 	techniqueEn = "";
-	techniqueJa = "";	
+	techniqueJa = "";
+	kamonEn = "";
+	kamonJa = "";	
+	rakkanEn = "";
+	rakkanJa = "";			
 	mitake = "";
 	yuki = "";
 	sodetake = "";
@@ -309,7 +317,15 @@ function translateProperties(original) {
 			case "technique":
 				techniqueEn = values.join(",");
 				techniqueJa = newValues
-				break;									
+				break;	
+			case "kamon":
+				kamonEn = values.join(",");
+				kamonJa = newValues
+				break;
+			case "rakkan":
+				rakkanEn = values.join(",");
+				rakkanJa = newValues
+				break;																		
 		}
 
 		switch (propertyName) {

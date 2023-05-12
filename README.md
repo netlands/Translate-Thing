@@ -1,5 +1,5 @@
 # Translate Thing
-Simple Node.js translation app using a SQLite based glossary/translation memory (tm). 
+Simple Node.js "word/template" based translation app using a SQLite glossary/translation memory (tm). 
 
 ### Version
 

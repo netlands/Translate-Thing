@@ -1,6 +1,16 @@
 // console.log("connected");
 
-$(document).ready(function () {
+function ready(fn) {
+	// $(document).ready(function () { ... })
+	if (document.readyState !== 'loading') {
+	  fn();
+	  return;
+	}
+	document.addEventListener('DOMContentLoaded', fn);
+ }
+
+ready(function(){ // $(document).ready(function () {
+	console.log("Page structure loaded!");
 	$('select').selectpicker();
 
 	$("#HButton").on("click", function () {
@@ -33,34 +43,34 @@ $(document).ready(function () {
 		document.getElementById("titleTranslated").value = titleJapanese;
 
 		jQuery("#titleAge option").filter(function () {
-			return $.trim($(this).text()) == data.en.age
+			return $(this).text().trim() == data.en.age
 		}).prop('selected', true);
 		jQuery("#titleCategory option").filter(function () {
-			return $.trim($(this).text()) == data.en.category
+			return $(this).text().trim() == data.en.category
 		}).prop('selected', true);
 		data.en.type.forEach(function callbackFn(element) {
 			jQuery("#titleType option").filter(function () {
-				return $.trim($(this).text()) == element
+				return $(this).text().trim() == element
 			}).prop('selected', true);
 		})
 		data.en.color.forEach(function callbackFn(element) {
 			jQuery("#titleColor option").filter(function () {
-				return $.trim($(this).text()) == element
+				return $(this).text().trim() == element
 			}).prop('selected', true);
 		})			
 		data.en.material.forEach(function callbackFn(element) { 		
 			jQuery("#titleMaterial option").filter(function () {
-				return $.trim($(this).text()) == element
+				return $(this).text().trim() == element
 			}).prop('selected', true);
 		})
 		data.en.pattern.forEach(function callbackFn(element) { 
 			jQuery("#titlePattern option").filter(function () {
-				return $.trim($(this).text()) == element
+				return $(this).text().trim() == element
 			}).prop('selected', true);
 		})
 		data.en.technique.forEach(function callbackFn(element) { 
 			jQuery("#titleTechnique option").filter(function () {
-				return $.trim($(this).text()) == element
+				return $(this).text().trim() == element
 			}).prop('selected', true);
 		})		
 		$('.selectpicker').selectpicker('refresh');
@@ -135,10 +145,6 @@ $(document).ready(function () {
 			});
 	});
 
-});
-
-
-$(document).ready(function () {
 
 	$(document).on('show.bs.modal', '#myModal', function () {
 		// Use try & catch for unsupported browser

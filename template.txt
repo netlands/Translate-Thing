@@ -1,5 +1,8 @@
 Vintage red silk kimono with a overall tatewaku design.
 
+age: vintage
+condition: excellent, used, wearable
+
 type: fudangi (casual wear), hitoe
 material: silk, cotton (doura)
 emon-nuki: -

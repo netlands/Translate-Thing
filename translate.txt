@@ -1,0 +1,14 @@
+%title% | %title_jp%
+
+####
+%lb%
+%description%
+%lb%
+%age%
+%condition%
+%lb%
+%size%
+%lb%
+%details%
+%lb%
+####

@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var cors = require('cors')
 var path = require('path');
 const db = require('better-sqlite3')('tm.db');
 const open = require('open');
@@ -9,6 +10,8 @@ const {
 const {
 	takeCoverage
 } = require('v8');
+
+app.use(cors())
 
 // set the view engine to ejs
 app.set('view engine', 'ejs');

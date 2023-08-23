@@ -13,14 +13,15 @@
     "better-sqlite3": "^7.4.3",
     "bootstrap": "^4.2.1",
     "bootstrap-select": "^1.13.18",
+    "cors": "^2.8.5",
     "ejs": "^3.1.8",
     "express": "^4.16.4",
+    "got": ">=11.8.5",
     "gridjs": "^5.0.2",
     "jquery": "^3.3.1",
     "nodemon": "^2.0.12",
     "open": "^8.2.1",
     "tar": "^6.1.11",
-    "wanakana": "^4.0.2",
-    "got": ">=11.8.5"
+    "wanakana": "^4.0.2"
   }
 }

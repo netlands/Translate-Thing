@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+        <title>test translation</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    </head>
+
+    <body>
+        <script>
+
+                console.log("Hello there!");
+                var original = "age: vintage";
+
+                $.ajax({
+                        url: "http://127.0.0.1:3000/api/translate",
+                        type: 'GET',
+                        data: {
+                            original: original
+                        },
+                        success: function () {
+                            console.log('Successfully connected to the server');
+                        },
+                        error: function () {
+                            console.log('Something went wrong');
+                        }
+                    })
+                    .done(function (data) {
+                        console.log("returned data:", data);
+                        return data;
+                    });
+
+
+        </script>        
+      
+
+    </body>
+</html>

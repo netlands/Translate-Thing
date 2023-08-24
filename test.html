@@ -9,30 +9,59 @@
     <body>
         <script>
 
-                console.log("Hello there!");
-                var original = "age: vintage";
+        var server = "127.0.0.1:3000"
 
-                $.ajax({
-                        url: "http://127.0.0.1:3000/api/translate",
-                        type: 'GET',
-                        data: {
-                            original: original
-                        },
-                        success: function () {
-                            console.log('Successfully connected to the server');
-                        },
-                        error: function () {
-                            console.log('Something went wrong');
-                        }
-                    })
-                    .done(function (data) {
-                        console.log("returned data:", data);
-                        return data;
-                    });
+        async function checkServer(fqdn, imagepath="/favicon.ico") {
+            let img = new Image();
+            img.onload = function() { //console.log("online"); 
+                return true; 
+            };
+            img.onerror = function() { //console.log("offline"); 
+                return false; 
+            };
+            img.src = "http://" + fqdn + imagepath + '?r=' + Math.random(); /* avoids caching */
+        }
 
-
-        </script>        
       
+    
+        async function translate(input) {    
+            console.log("translating ...");
+            var original = input;
+
+            $.ajax({
+                    url: "http://" + server + "/api/translate",
+                    type: 'GET',
+                    data: {
+                        original: original
+                    },
+                    success: function () {
+                        console.log('Successfully connected to the server');
+                    },
+                    error: function () {
+                        console.log('Something went wrong');
+                    }
+                })
+                .done(function (data) {
+                    console.log("returned data:", data);
+                    return data;
+                });
+        }
+
+        function translateText() {
+            if (checkServer(server)) {
+                var textbox = document.getElementById("textbox");
+                var input = textbox.value;
+                translate(input);
+            } else { console.log("unavailable")}
+        }
+
+        </script> 
+
+        <input type="text" id="textbox" placeholder="Enter text here">
+        <button onclick="translateText()">tranlate</button>
+        <p>example: age: vintage</p>
+        <p>mitake: 120 cm (center back)</p>
+        <p>color: green, red (hakkake)</p>
 
     </body>
 </html>

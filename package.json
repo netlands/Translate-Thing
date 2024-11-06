@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "@popperjs/core": "^2.10.1",
-    "better-sqlite3": "9.0.0",
+    "better-sqlite3": "11.5.0",
     "bootstrap": "^4.2.1",
     "bootstrap-select": "^1.13.18",
     "cors": "^2.8.5",

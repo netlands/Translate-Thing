@@ -1,7 +1,7 @@
 Vintage red silk kimono with a overall tatewaku design.
 
-age: vintage
-condition: excellent, used, wearable
+age: vintage, used
+condition: excellent, stains (lower left front panel), damage (back left sleeve, front left sleeve)
 
 type: fudangi (casual wear), hitoe
 material: silk, cotton (doura)

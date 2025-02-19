@@ -293,8 +293,15 @@ function translateProperties(original) {
 		propertyName = translation;
 		translation = translation + "：";
 
+		// prepare the vbalue for translation
+		// Remove extra spaces
+		value = value.replace(/\s{2,}/g, ' ');
+		// Replace commas inside round brackets with " |"		
+    	value = value.replace(/\(([^）]+),([^）]+)\)/g, '($1 |$2)');
+
 		// translate all property values 
 		const values = value.split(",");
+
 		newValues = "、";
 		for (let i = 0; i < values.length; i++) {
 			value = values[i].trim();
@@ -302,6 +309,24 @@ function translateProperties(original) {
 				valueJa = getTranslation(value);
 				valueJa = valueJa.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
 				valueJa = valueJa.replace(/([\d]+?(?: )?(?:kg|cm|g|m)?)\s*?[xX×\*]\s*?([\d]+)/g, "$1 × $2"); // ×
+
+				// check if we have location information in brackets
+				// and get position (upper, left, front) and part (panel, sleeve, ...)
+				const regex = /[\(（]\b(?:top|bottom|upper|lower|left|right|front|back|inside|outside)\b.+?[\)）]/gi;
+				if (regex.test(valueJa)) {
+					// (?=\b(?:top|bottom|upper|lower|left|right|front|back|inside|outside)\b)\b(?:top|bottom|upper|lower|left|right|front|back|inside|outside)?
+					const result = valueJa.match(regex);
+					if (result) {
+						// console.log("Match found:", result[0]);
+						translatedSentence = translateSentence(result[0].replace(/^[\(（]+|[\)）]+$/g, ''), " ");
+						translatedSentence = translatedSentence.replace("|","、");
+						valueJa = valueJa.replace(result[0],"（"+translatedSentence+"）");
+					}
+
+
+				}	
+
+
 				if (newValues.includes('、' + valueJa + '、')) {} else {
 					newValues = newValues + valueJa + "、";
 				}
@@ -425,6 +450,17 @@ function kujirajaku(inputValue) {
 	if (calculatedValue.length > 2) { shaku = calculatedValue.substring(0,calculatedValue.length - 2) + " 尺" };
 	// console.log(inputValue + "cm : " + calculatedValue + " : " + (shaku + " " + sun + " " + bu).trim());
 	return "（" + (shaku + " " + sun + " " + bu).trim() + "）"
+}
+
+function translateSentence(sentence, separator) {
+    // Split the sentence based on spaces
+    const words = sentence.split(' ');
+    // Run getTranslation on each part
+    const translatedWords = words.map(getTranslation);
+    // Put the string together again
+    separator = ""; // remove spaces from translation
+	const translatedSentence = translatedWords.join(separator);
+    return translatedSentence;
 }
 
 

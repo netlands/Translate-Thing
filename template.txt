@@ -7,7 +7,7 @@ type: fudangi (casual wear), hitoe
 material: silk, cotton (doura)
 emon-nuki: -
 han-eri: attached (silk)
-color: red (hakkake)
+color: red (hakkake: pink)
 
 mitake: 120 cm (center back)
 yuki: 60cm

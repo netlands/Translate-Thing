@@ -254,7 +254,6 @@ function translateProperties(original) {
 	maehaba = "";
 	ushirohaba = "";
 
-
 	// get all property name : value pairs
 	var regex = new RegExp(/^([A-Za-z\-/ ]+): (.+)$/gm);
 	var result, translation;
@@ -293,11 +292,13 @@ function translateProperties(original) {
 		propertyName = translation;
 		translation = translation + "：";
 
-		// prepare the vbalue for translation
+		// prepare the value for translation
 		// Remove extra spaces
 		value = value.replace(/\s{2,}/g, ' ');
-		// Replace commas inside round brackets with " |"		
-    	value = value.replace(/\(([^）]+),([^）]+)\)/g, '($1 |$2)');
+		// Segmentation rules [.,?!;:§]
+		value = value.replace(/\s*([.,?!;:§])\s*/g, '$1');	
+		// Replace commas inside round brackets with "§"		
+    	value = value.replace(/\(([^）]+),([^）]+)\)/g, '($1§$2)');
 
 		// translate all property values 
 		const values = value.split(",");
@@ -310,7 +311,7 @@ function translateProperties(original) {
 				valueJa = valueJa.replace(/([\d]+?)(?: )*(kg|cm|g|m)/g, "$1 $2");
 				valueJa = valueJa.replace(/([\d]+?(?: )?(?:kg|cm|g|m)?)\s*?[xX×\*]\s*?([\d]+)/g, "$1 × $2"); // ×
 
-				// check if we have location information in brackets
+				/*/ check if we have location information in brackets
 				// and get position (upper, left, front) and part (panel, sleeve, ...)
 				const regex = /[\(（]\b(?:top|bottom|upper|lower|left|right|front|back|inside|outside)\b.+?[\)）]/gi;
 				if (regex.test(valueJa)) {
@@ -322,9 +323,21 @@ function translateProperties(original) {
 						translatedSentence = translatedSentence.replace("|","、");
 						valueJa = valueJa.replace(result[0],"（"+translatedSentence+"）");
 					}
+				}*/	
 
-
-				}	
+				// check if we have any text between collons that contains more than one word (contains a space or collon) 
+				const regex2 = /[\(（]([^)]+)[\)）]/g;
+				let match;
+			  
+				while ((match = regex2.exec(valueJa)) !== null) {
+				  const content = match[1];
+				  // console.log(content);
+				  if (/[ ,:]/.test(content)) {
+					translatedSentence = translateSentence(content);
+					valueJa = valueJa.replace(content,translatedSentence);
+				  }
+				}					
+				valueJa = valueJa.replace("§","、");
 
 
 				if (newValues.includes('、' + valueJa + '、')) {} else {
@@ -452,6 +465,28 @@ function kujirajaku(inputValue) {
 	return "（" + (shaku + " " + sun + " " + bu).trim() + "）"
 }
 
+function translateSentence(input) {
+	// Split the string based on the specified separators
+	const separators = [',', '.', '!', '?', ':', ';', ' ',"§"];
+	const regex = new RegExp(`(${separators.map(sep => '\\' + sep).join('|')})`);
+	const parts = input.split(regex);
+  
+	// Process each part
+	const processedParts = parts.map(part => {
+	  if (separators.includes(part)) {
+		return part; // Return the separator as is
+	  } else {
+		return getTranslation(part); // Process the word
+	  }
+	});
+  
+	// Join the parts back together
+	var translatedSentence = processedParts.join('');
+	translatedSentence = replaceSymbols(translatedSentence);
+	return translatedSentence;
+}
+
+/*
 function translateSentence(sentence, separator) {
     // Split the sentence based on spaces
     const words = sentence.split(' ');
@@ -462,6 +497,29 @@ function translateSentence(sentence, separator) {
 	const translatedSentence = translatedWords.join(separator);
     return translatedSentence;
 }
+*/
+
+function replaceSymbols(input) {
+	const symbolMap = {
+	  '.': '。',
+	  ',': '、',
+	  ';': '；',
+	  ':': '：',
+	  '!': '！',
+	  '?': '？',
+	  ' ': ''	  
+	};
+  
+	let result = '';
+	for (let char of input) {
+	  if (symbolMap[char]) {
+		result += symbolMap[char];
+	  } else {
+		result += char;
+	  }
+	}
+	return result;
+  }
 
 
 function getTranslation(term) {

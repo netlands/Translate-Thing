@@ -295,7 +295,7 @@ function translateProperties(original) {
 		// prepare the value for translation
 		// Remove extra spaces
 		value = value.replace(/\s{2,}/g, ' ');
-		// Segmentation rules [.,?!;:§]
+		// Segmentation rules [.,?!;:§¶]
 		value = value.replace(/\s*([.,?!;:§])\s*/g, '$1');	
 		// Replace commas inside round brackets with "§"		
     	value = value.replace(/\(([^）]+),([^）]+)\)/g, '($1§$2)');
@@ -467,7 +467,7 @@ function kujirajaku(inputValue) {
 
 function translateSentence(input) {
 	// Split the string based on the specified separators
-	const separators = [',', '.', '!', '?', ':', ';', ' ',"§"];
+	const separators = [',', '.', '!', '?', ':', ';', ' ',"§","¶"];
 	const regex = new RegExp(`(${separators.map(sep => '\\' + sep).join('|')})`);
 	const parts = input.split(regex);
   

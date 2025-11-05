@@ -2,7 +2,7 @@ var express = require('express');
 var app = express();
 var cors = require('cors')
 var path = require('path');
-const db = require('better-sqlite3')('tm.db');
+const db = require('better-sqlite3-with-prebuilds')('tm.db');
 const open = require('open');
 const {
 	Agent

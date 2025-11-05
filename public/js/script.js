@@ -222,17 +222,34 @@ ready(function(){ // $(document).ready(function () {
 			}
 		}).done(function (data) {
 			const resEl = document.getElementById('sqlResult');
-			resEl.style.display = 'block';
+			resEl.style.display = 'none';
 			if (!data || !data.rows) {
+				resEl.style.display = 'block';
 				resEl.textContent = 'No rows';
 				return;
 			}
-			// Pretty-print rows
-			try {
-				resEl.textContent = JSON.stringify(data.rows, null, 2);
-			} catch (err) {
-				resEl.textContent = String(data.rows);
-			}
+			// Render SQL result rows into the main table using GridJS (object mode)
+			const rows = data.rows;
+			// Update title fields (in case SQL returned glossary-like rows)
+			try { updateTitleFields(rows); } catch (e) {}
+			document.getElementById('table').innerHTML = '';
+			const grid = new gridjs.Grid({
+				sort: true,
+				search: { enabled: true },
+				pagination: { limit: 50 },
+				fixedHeader: true,
+				height: '400px',
+				data: rows
+			}).render(document.getElementById('table'));
+
+			grid.updateConfig({
+				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+					{ name: 'id', hidden: true }
+				],
+				height: '500px'
+			}).forceRender();
+
+			try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
 		});
 	});
 

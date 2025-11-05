@@ -145,6 +145,36 @@ ready(function(){ // $(document).ready(function () {
 			});
 	});
 
+	$("#DButton").on("click", function () {
+		const id = $("#idx").val();
+		if (!id) {
+			alert('No term selected to delete');
+			return;
+		}
+		if (!confirm('Are you sure you want to delete this term? This action cannot be undone.')) {
+			return;
+		}
+		$.ajax({
+			url: "/api/deleteterm",
+			data: { id: id },
+			success: function () {
+				console.log('Successfully connected to the server');
+			},
+			error: function () {
+				console.log('Something went wrong');
+			}
+		})
+		.done(function (data) {
+			console.log("returned data:", data);
+			if (data.message === "term deleted") {
+				$('#myModalx').modal('hide');
+				updateTable("");
+			} else {
+				alert('Delete failed: ' + (data.message || JSON.stringify(data)));
+			}
+		});
+	});
+
 
 	$(document).on('show.bs.modal', '#myModal', function () {
 		// Use try & catch for unsupported browser

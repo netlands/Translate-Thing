@@ -121,6 +121,27 @@ app.get('/api/updateterm', function (req, res) {
 	});
 });
 
+app.get('/api/deleteterm', function (req, res) {
+	// expects id in query
+	const id = req.query.id;
+	if (!id) {
+		res.status(400).json({ message: 'missing id' });
+		return;
+	}
+	try {
+		const stmt = db.prepare('DELETE FROM glossary WHERE id = ?');
+		const info = stmt.run(id);
+		if (info.changes && info.changes > 0) {
+			res.json({ message: 'term deleted' });
+		} else {
+			res.status(404).json({ message: 'not found' });
+		}
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: 'error', error: err.message });
+	}
+});
+
 app.get('/api/getterm', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
 	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority');

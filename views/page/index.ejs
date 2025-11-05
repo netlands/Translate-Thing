@@ -56,6 +56,16 @@
 			<!-- $('.gridjs-input').val() -->
 			<button type="button" class="btn btn-secondary btn-block" data-toggle="modal" data-target="#myModal">Add New
 				Term</button>
+
+			<!-- SQL execution panel (SELECT only) -->
+			<div class="pt-2">
+				<label class="sr-only" for="sqlQuery">SQL Query</label>
+				<textarea id="sqlQuery" class="form-control" rows="3" placeholder="Enter a SELECT SQL query (read-only). Example: SELECT en, ja FROM glossary WHERE type='material';"></textarea>
+				<div class="pt-2">
+					<button type="button" class="btn btn-warning" id="ExecSQL">Execute SQL (SELECT only)</button>
+				</div>
+				<pre id="sqlResult" style="white-space:pre-wrap; background:#f8f9fa; border:1px solid #ddd; padding:8px; margin-top:8px; display:none;"></pre>
+			</div>
 		</div> <!-- Container-->
 
 	<!-- Custom context menu for glossary rows -->
@@ -73,6 +83,13 @@
 			<li class="context-item context-delete" data-action="delete-entry" style="color:#a94442;">Delete Entry</li>
 		</ul>
 	</div>
+	</div>
+
+	<!-- Context menu for search input (moved here so it's available globally) -->
+	<div id="search-context-menu" style="display:none; position:absolute; z-index:2000; background:#fff; border:1px solid #ccc; box-shadow:0 2px 6px rgba(0,0,0,0.15);">
+		<ul style="list-style:none; margin:0; padding:6px 0; min-width:180px;">
+			<li class="search-context-item" data-action="show-duplicates" style="padding:6px 12px; cursor:pointer;">Show duplicate EN terms</li>
+		</ul>
 	</div>
 
 	<div class="col collapse multi-collapse show container justify-content-center pt-2 pb-5 form-group" id="home">
@@ -203,6 +220,7 @@
 				</div>
 			</div>
 		</div>
+
 	</div>
 
 

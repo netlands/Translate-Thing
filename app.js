@@ -2,6 +2,9 @@ var express = require('express');
 var app = express();
 var cors = require('cors')
 var path = require('path');
+// body parser for POST
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const db = require('better-sqlite3')('tm.db');
 const open = require('open');
 const {
@@ -179,6 +182,40 @@ app.get('/api/gettable', function (req, res) {
 		res.json({
 			rows: row
 		});
+	}
+});
+
+app.get('/api/getduplicates', function (req, res) {
+	try {
+		// Use trimmed, lower-cased en to detect duplicates regardless of case/whitespace
+		const stmt = db.prepare("SELECT * FROM glossary WHERE lower(trim(en)) IN (SELECT lower(trim(en)) FROM glossary GROUP BY lower(trim(en)) HAVING COUNT(*)>1) ORDER BY lower(trim(en))");
+		const rows = stmt.all();
+		res.json({ rows: rows });
+	} catch (err) {
+		console.error(err);
+		res.status(500).json({ message: 'error', error: err.message });
+	}
+});
+
+// Execute a SELECT SQL query (READ-ONLY). For safety, only allow SELECT statements.
+app.post('/api/execsql', function (req, res) {
+	const sql = (req.body.sql || '').toString().trim();
+	if (!sql) {
+		res.status(400).json({ message: 'missing sql' });
+		return;
+	}
+	// Quick safety: only allow statements that start with SELECT (case-insensitive)
+	if (!/^select\s+/i.test(sql)) {
+		res.status(400).json({ message: 'only SELECT statements are allowed' });
+		return;
+	}
+	try {
+		const stmt = db.prepare(sql);
+		const rows = stmt.all();
+		res.json({ rows: rows });
+	} catch (err) {
+		console.error('SQL exec error:', err);
+		res.status(500).json({ message: 'error', error: err.message });
 	}
 });
 

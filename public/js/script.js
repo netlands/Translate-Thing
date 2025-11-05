@@ -203,6 +203,39 @@ ready(function(){ // $(document).ready(function () {
 		$('#myModal').show();
 	});
 
+	// Execute SQL (SELECT only)
+	$(document).on('click', '#ExecSQL', function () {
+		const sql = document.getElementById('sqlQuery').value;
+		if (!sql || sql.trim().length === 0) {
+			alert('Please enter a SELECT SQL query');
+			return;
+		}
+		$.ajax({
+			url: '/api/execsql',
+			type: 'POST',
+			data: { sql: sql },
+			success: function () {},
+			error: function (xhr) { 
+				let msg = 'Error executing SQL';
+				try { msg = JSON.parse(xhr.responseText).error || JSON.parse(xhr.responseText).message; } catch (e) {}
+				alert(msg);
+			}
+		}).done(function (data) {
+			const resEl = document.getElementById('sqlResult');
+			resEl.style.display = 'block';
+			if (!data || !data.rows) {
+				resEl.textContent = 'No rows';
+				return;
+			}
+			// Pretty-print rows
+			try {
+				resEl.textContent = JSON.stringify(data.rows, null, 2);
+			} catch (err) {
+				resEl.textContent = String(data.rows);
+			}
+		});
+	});
+
 	$('#myModal').on('hidden.bs.modal', function () {
 		$("#addTerm").trigger("reset"); // Reset form
 	});
@@ -301,6 +334,67 @@ document.addEventListener('DOMContentLoaded', function () {
 	document.addEventListener('click', function (e) {
 		hideMenu();
 	});
+
+		// Search input context menu (delegated) — avoids null if element not yet available
+		const searchMenu = document.getElementById('search-context-menu');
+		// Show menu when right-clicking inside the glossary container or on the gridjs search input
+		document.body.addEventListener('contextmenu', function (e) {
+			try {
+				if (!searchMenu) return;
+				const target = e.target;
+				// gridjs search input has class 'gridjs-search-input' and lives inside the #table container
+				const isGridSearch = target && (target.classList && target.classList.contains('gridjs-search-input'));
+				// Only show the search-context-menu when right-clicking the GridJS search input itself
+				if (isGridSearch) {
+					e.preventDefault();
+					searchMenu.style.left = e.pageX + 'px';
+					searchMenu.style.top = e.pageY + 'px';
+					searchMenu.style.display = 'block';
+				}
+			} catch (err) {
+				console.error('Error handling search contextmenu:', err);
+			}
+		});
+
+		// handle search menu clicks
+		if (searchMenu) {
+			searchMenu.addEventListener('click', function (e) {
+				const action = e.target.getAttribute('data-action');
+				if (action === 'show-duplicates') {
+					// fetch duplicates and render
+					$.ajax({ url: '/api/getduplicates' }).done(function (data) {
+						const rows = data.rows || [];
+						// prepare data for gridjs (rows already are objects, map to arrays)
+						// sort rows by normalized en so duplicates are adjacent
+						rows.sort(function(a,b){
+							const an = (a.en||'').toString().trim().toLowerCase();
+							const bn = (b.en||'').toString().trim().toLowerCase();
+							if (an < bn) return -1; if (an > bn) return 1; return 0;
+						});
+						// render using objects so gridjs rowClick and config behave consistently
+						document.getElementById('table').innerHTML = '';
+						const grid = new gridjs.Grid({
+							sort: true,
+							search: { enabled: true },
+							pagination: { limit: 50 },
+							fixedHeader: true,
+							height: '400px',
+							data: rows
+						}).render(document.getElementById('table'));
+
+						grid.updateConfig({
+							columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+								{ name: 'id', hidden: true }
+							],
+							height: '500px'
+						}).forceRender();
+
+						try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+					});
+				}
+				searchMenu.style.display = 'none';
+			});
+		}
 
 	// Context menu on table
 	tableContainer.addEventListener('contextmenu', function (e) {

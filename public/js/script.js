@@ -264,6 +264,30 @@ ready(function(){ // $(document).ready(function () {
 // [{"en":"silk","ja":"正絹","furigana":"","romaji":"shouken","ja2":"","en2":"","context":"","type":"material","note":""},{"en":"silk","ja":"絹","furigana":"きぬ","romaji":"kinu","ja2":"","en2":"","context":"","type":"material","note":""}]
 
 function updateTable(term) {
+	// if duplicatesMode is enabled, fetch duplicates instead of full table
+	if (window.duplicatesMode) {
+		document.getElementById('table').innerHTML = '';
+		$.ajax({ url: '/api/getduplicates' }).done(function (data) {
+			const rows = data.rows || [];
+			try { updateTitleFields(rows); } catch (e) {}
+			const grid = new gridjs.Grid({
+				sort: true,
+				search: { enabled: true, keyword: term || '' },
+				pagination: { limit: 50 },
+				fixedHeader: true,
+				height: '400px',
+				data: rows
+			}).render(document.getElementById('table'));
+			grid.updateConfig({
+				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+					{ name: 'id', hidden: true }
+				],
+				height: '500px'
+			}).forceRender();
+			try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+		});
+		return;
+	}
 	searchTerm = term; 
 	try {
 		searchTerm = document.querySelector(".gridjs-search-input").value;
@@ -335,6 +359,70 @@ function updateTable(term) {
 	});
 
 }
+
+// duplicates toggle: when enabled, updateTable shows only duplicates
+window.duplicatesMode = false;
+
+// helper to render rows into the main grid
+function renderGridFromRows(rows, term) {
+	try { updateTitleFields(rows); } catch (e) {}
+	document.getElementById('table').innerHTML = '';
+	const grid = new gridjs.Grid({
+		sort: true,
+		search: { enabled: true, keyword: term || '' },
+		pagination: { limit: 50 },
+		fixedHeader: true,
+		height: '400px',
+		data: rows
+	}).render(document.getElementById('table'));
+	grid.updateConfig({
+		columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+			{ name: 'id', hidden: true }
+		],
+		height: '500px'
+	}).forceRender();
+	try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+	// force a repaint and reset scroll to ensure the new grid is visible
+	try {
+		grid.forceRender();
+	} catch (e) {}
+	const wrapper = document.getElementById('table').querySelector('.gridjs-wrapper');
+	if (wrapper) {
+		try { wrapper.scrollTop = 0; wrapper.scrollLeft = 0; } catch (e) {}
+	}
+	// dispatch a resize event and schedule a second render to avoid visual staleness
+	try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+	setTimeout(function () { try { grid.forceRender(); } catch (e) {} }, 120);
+}
+
+$(document).on('click', '#ShowDuplicates', function () {
+	window.duplicatesMode = !window.duplicatesMode;
+	const btn = document.getElementById('ShowDuplicates');
+	if (window.duplicatesMode) {
+		btn.textContent = 'Show all terms';
+		// fetch duplicates and render
+		$.ajax({ url: '/api/getduplicates' }).done(function (data) {
+			const rows = data.rows || [];
+			// normalize/sort by en then ja so duplicates cluster
+			rows.sort(function(a,b){
+				const an = (a.en||'').toString().trim().toLowerCase();
+				const bn = (b.en||'').toString().trim().toLowerCase();
+				if (an < bn) return -1; if (an > bn) return 1;
+				const aj = (a.ja||'').toString().trim().toLowerCase();
+				const bj = (b.ja||'').toString().trim().toLowerCase();
+				if (aj < bj) return -1; if (aj > bj) return 1; return 0;
+			});
+			renderGridFromRows(rows,'');
+		});
+	} else {
+		btn.textContent = 'Show duplicate terms only';
+		// fetch full table and render
+		$.ajax({ url: '/api/gettable' }).done(function (data) {
+			const rows = data.rows || [];
+			renderGridFromRows(rows,'');
+		});
+	}
+});
 
 // Right-click context menu for glossary table
 document.addEventListener('DOMContentLoaded', function () {

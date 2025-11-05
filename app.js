@@ -187,8 +187,12 @@ app.get('/api/gettable', function (req, res) {
 
 app.get('/api/getduplicates', function (req, res) {
 	try {
-		// Use trimmed, lower-cased en to detect duplicates regardless of case/whitespace
-		const stmt = db.prepare("SELECT * FROM glossary WHERE lower(trim(en)) IN (SELECT lower(trim(en)) FROM glossary GROUP BY lower(trim(en)) HAVING COUNT(*)>1) ORDER BY lower(trim(en))");
+		// Detect duplicates in either en or ja (case-insensitive, trimmed)
+		const sql = `SELECT * FROM glossary
+			WHERE lower(trim(en)) IN (SELECT lower(trim(en)) FROM glossary GROUP BY lower(trim(en)) HAVING COUNT(*)>1)
+			   OR lower(trim(ja)) IN (SELECT lower(trim(ja)) FROM glossary GROUP BY lower(trim(ja)) HAVING COUNT(*)>1)
+			ORDER BY lower(trim(en)) COLLATE NOCASE, lower(trim(ja)) COLLATE NOCASE`;
+		const stmt = db.prepare(sql);
 		const rows = stmt.all();
 		res.json({ rows: rows });
 	} catch (err) {

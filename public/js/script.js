@@ -286,6 +286,142 @@ function updateTable(term) {
 
 }
 
+// Right-click context menu for glossary table
+document.addEventListener('DOMContentLoaded', function () {
+	const tableContainer = document.getElementById('table');
+	const menu = document.getElementById('glossary-context-menu');
+	let currentRowData = { en: '', ja: '' };
+
+	// Helper to hide menu
+	function hideMenu() {
+		if (menu) menu.style.display = 'none';
+	}
+
+	// Click anywhere hides the menu
+	document.addEventListener('click', function (e) {
+		hideMenu();
+	});
+
+	// Context menu on table
+	tableContainer.addEventListener('contextmenu', function (e) {
+		// find the clicked row element
+		let el = e.target;
+		// gridjs uses td inside tr, try to find ancestor tr
+		while (el && el !== tableContainer && el.tagName !== 'TR') {
+			el = el.parentElement;
+		}
+		if (!el || el === tableContainer) {
+			return; // not on a row
+		}
+
+		// prevent default browser menu
+		e.preventDefault();
+
+		// get cells: en, ja and id (if present in a hidden column)
+		const tds = el.querySelectorAll('td');
+		if (!tds || tds.length < 2) {
+			return;
+		}
+		const en = tds[0].innerText.trim();
+		const ja = tds[1].innerText.trim();
+		// try to get id from last cell
+		const idCell = tds[tds.length - 1];
+		let rowId = '';
+		if (idCell) {
+			rowId = idCell.innerText.trim();
+		}
+		currentRowData = { en: en, ja: ja, id: rowId };
+
+		// position and show menu
+		menu.style.left = e.pageX + 'px';
+		menu.style.top = e.pageY + 'px';
+		menu.style.display = 'block';
+	});
+
+	// Menu item clicks
+	menu.addEventListener('click', function (e) {
+		const action = e.target.getAttribute('data-action');
+		if (!action) return;
+		if (action === 'copy-en') {
+			navigator.clipboard.writeText(currentRowData.en).then(function () {
+				console.log('Copied EN:', currentRowData.en);
+			});
+		} else if (action === 'copy-ja') {
+			navigator.clipboard.writeText(currentRowData.ja).then(function () {
+				console.log('Copied JA:', currentRowData.ja);
+			});
+		} else if (action === 'delete-entry') {
+			// confirm and call delete API. If id is missing in the DOM, try to find it via /api/gettable
+			function doDelete(idToDelete) {
+				if (!idToDelete) {
+					alert('No id found for this row');
+					return;
+				}
+				$.ajax({
+					url: '/api/deleteterm',
+					data: { id: idToDelete },
+					success: function () { console.log('Delete requested'); },
+					error: function () { console.log('Delete request failed'); }
+				}).done(function (data) {
+					console.log('delete response', data);
+					if (data && data.message === 'term deleted') {
+						updateTable('');
+					} else {
+						alert('Delete failed: ' + (data && data.message ? data.message : JSON.stringify(data)));
+					}
+				});
+			}
+
+			if (!confirm('Delete this entry? This cannot be undone.')) {
+				hideMenu();
+				return;
+			}
+
+			if (currentRowData.id && /^\d+$/.test(currentRowData.id)) {
+				// looks numeric; assume it's a valid id
+				doDelete(currentRowData.id);
+			} else {
+				// fetch rows matching the English term and try to locate the exact row by ja
+				$.ajax({
+					url: '/api/getrows',
+					data: { term: currentRowData.en },
+					success: function () {},
+					error: function () { console.log('Failed to fetch rows for id lookup'); }
+				}).done(function (data) {
+					try {
+						const rows = data.rows || [];
+						let foundId = null;
+						for (let i = 0; i < rows.length; i++) {
+							const r = rows[i];
+							// r is an object returned from the DB (en, ja, ... , id)
+							if (r.en === currentRowData.en && r.ja === currentRowData.ja) {
+								foundId = r.id;
+								break;
+							}
+						}
+						if (foundId) {
+							doDelete(foundId);
+						} else {
+							alert('Could not find matching id for this row');
+						}
+					} catch (err) {
+						console.error(err);
+						alert('Error finding id: ' + err.message);
+					}
+				});
+			}
+		}
+		hideMenu();
+	});
+
+	// Hide builtin context menu when clicking outside
+	document.addEventListener('contextmenu', function (e) {
+		// If the click is inside our grid container, we've already handled it; otherwise let it be
+		if (!tableContainer.contains(e.target)) return;
+		e.preventDefault();
+	});
+});
+
 window.onload = function () {
 	console.log("Done loading!");
 	init();

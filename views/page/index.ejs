@@ -57,6 +57,22 @@
 			<button type="button" class="btn btn-secondary btn-block" data-toggle="modal" data-target="#myModal">Add New
 				Term</button>
 		</div> <!-- Container-->
+
+	<!-- Custom context menu for glossary rows -->
+	<style>
+		#glossary-context-menu { display:none; position:absolute; z-index:2000; background:#fff; border:1px solid #ccc; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+		#glossary-context-menu ul { list-style:none; margin:0; padding:6px 0; min-width:160px; }
+		#glossary-context-menu .context-item { padding:6px 12px; cursor:pointer; }
+		#glossary-context-menu .context-item:hover { background:#f0f0f0; }
+		#glossary-context-menu .context-item:active { background:#e0e0e0; }
+	</style>
+	<div id="glossary-context-menu">
+		<ul>
+			<li class="context-item" data-action="copy-en">Copy English</li>
+			<li class="context-item" data-action="copy-ja">Copy Japanese</li>
+			<li class="context-item context-delete" data-action="delete-entry" style="color:#a94442;">Delete Entry</li>
+		</ul>
+	</div>
 	</div>
 
 	<div class="col collapse multi-collapse show container justify-content-center pt-2 pb-5 form-group" id="home">

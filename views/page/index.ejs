@@ -65,9 +65,10 @@
 			<!-- SQL execution panel (SELECT only) -->
 			<div class="pt-2">
 				<label class="sr-only" for="sqlQuery">SQL Query</label>
-				<textarea id="sqlQuery" class="form-control" rows="3" placeholder="Enter a SELECT SQL query (read-only). Example: SELECT en, ja FROM glossary WHERE type='material';"></textarea>
+				<textarea id="sqlQuery" class="form-control" rows="3" placeholder="Enter a SELECT SQL query or a simplified query (e.g. silk AND cotton). Example: SELECT en, ja FROM glossary WHERE type='material';"></textarea>
 				<div class="pt-2">
-					<button type="button" class="btn btn-warning" id="ExecSQL">Execute SQL (SELECT only)</button>
+					<button type="button" class="btn btn-warning" id="ExecSQL">Execute query (SELECT only)</button>
+					<small id="transformedSql" class="form-text text-muted mt-2" style="white-space: pre-wrap; display:none;"></small>
 				</div>
 				<pre id="sqlResult" style="white-space:pre-wrap; background:#f8f9fa; border:1px solid #ddd; padding:8px; margin-top:8px; display:none;"></pre>
 			</div>

@@ -6,6 +6,19 @@ var path = require('path');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const db = require('better-sqlite3')('tm.db');
+// helper: provide a regexp function to SQLite so we can use whole-word regex matching for quoted terms
+function escapeRegExp(s) {
+	return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+db.function('regexp', (pattern, value) => {
+	if (value === null || value === undefined) return 0;
+	try {
+		const re = new RegExp(pattern, 'i');
+		return re.test(String(value)) ? 1 : 0;
+	} catch (e) {
+		return 0;
+	}
+});
 const open = require('open');
 const {
 	Agent
@@ -208,15 +221,136 @@ app.post('/api/execsql', function (req, res) {
 		res.status(400).json({ message: 'missing sql' });
 		return;
 	}
-	// Quick safety: only allow statements that start with SELECT (case-insensitive)
-	if (!/^select\s+/i.test(sql)) {
-		res.status(400).json({ message: 'only SELECT statements are allowed' });
-		return;
-	}
 	try {
-		const stmt = db.prepare(sql);
-		const rows = stmt.all();
-		res.json({ rows: rows });
+		// If the user supplied a full SELECT statement, run it (same as before)
+		if (/^select\s+/i.test(sql)) {
+			const stmt = db.prepare(sql);
+			const rows = stmt.all();
+			res.json({ rows: rows });
+			return;
+		}
+
+		// Otherwise treat the input as a simplified query language.
+		// Rules:
+		// - The input may contain words separated by spaces and optionally joined by AND / OR (uppercase). If no operator is present between words, treat it as AND.
+		// - Each term should be searched across a set of text columns using LIKE %term% (case-insensitive).
+		// - Build a parameterized SELECT to avoid SQL injection.
+
+		const input = sql; // not a SELECT; treat as simple query
+
+		// Normalize spacing and treat commas as separators too
+		let norm = input.replace(/,/g, ' ');
+		// Split into tokens on whitespace
+		let rawTokens = norm.split(/\s+/).filter(t => t.length > 0);
+		// Clean tokens: trim surrounding punctuation except preserve quotes if explicitly used
+		const tokens = rawTokens.map(t => {
+			// If token starts and ends with matching quotes, keep them to mark literal
+			if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+				return t; // keep quotes
+			}
+			return t.replace(/^[\s\,;:\.\(\)\[\]\"'`]+|[\s\,;:\.\(\)\[\]\"'`]+$/g, '');
+		}).filter(t => t.length > 0);
+		if (tokens.length === 0) {
+			res.status(400).json({ message: 'empty query' });
+			return;
+		}
+
+		// Build an array of clauses joined by AND/OR. We'll convert to a SQL WHERE clause.
+		// Allowed operators are AND and OR (case-sensitive as requested). Any other token is a search term.
+
+		const textColumns = ['en','en2','romaji','ja','ja2','furigana','context','type','note', '"group"'];
+
+		let whereParts = [];
+		let parameters = [];
+		let displayParams = []; // human-readable values for display substitution
+
+		// We'll parse tokens into groups separated by OR, and within each OR-group we'll AND the terms.
+		// Example: ["silk","AND","cotton","OR","kimono"] => ((cols LIKE %silk% AND cols LIKE %cotton%) OR (cols LIKE %kimono%))
+
+		let currentAndTerms = [];
+		for (let i = 0; i < tokens.length; i++) {
+			const tk = tokens[i];
+			const tkUp = (tk || '').toUpperCase();
+			if (tkUp === 'OR') {
+				// flush currentAndTerms as one group
+				if (currentAndTerms.length > 0) {
+					whereParts.push({ type: 'ANDGROUP', terms: currentAndTerms.slice() });
+					currentAndTerms = [];
+				}
+			} else if (tkUp === 'AND') {
+				// explicit AND: just continue (AND is implicit)
+				continue;
+			} else {
+				// a search term (may be quoted)
+				// If quoted token, keep the quotes to mark it as literal
+				currentAndTerms.push(tk);
+			}
+		}
+		if (currentAndTerms.length > 0) {
+			whereParts.push({ type: 'ANDGROUP', terms: currentAndTerms.slice() });
+		}
+
+		if (whereParts.length === 0) {
+			res.status(400).json({ message: 'no searchable terms found' });
+			return;
+		}
+
+		// For each ANDGROUP, build a clause like ( (col1 LIKE ? OR col2 LIKE ? ...) AND (col1 LIKE ? OR col2 LIKE ? ...) )
+		let whereSqlPieces = [];
+		for (let group of whereParts) {
+			let termClauses = []; // each term => (col1 LIKE ? OR col2 LIKE ? ...)
+			for (let term of group.terms) {
+				let colOrs = [];
+				// detect quoted literal
+				let isQuoted = false;
+				let literal = term;
+				if ((term.startsWith('"') && term.endsWith('"')) || (term.startsWith("'") && term.endsWith("'"))) {
+					isQuoted = true;
+					literal = term.substring(1, term.length - 1);
+				}
+
+				for (let col of textColumns) {
+					if (isQuoted) {
+						// use sqlite regexp function for whole-word match: word boundary using \b may not work well with unicode,
+						// but we'll use a conservative pattern that matches non-word boundaries around the literal.
+						// We'll anchor to word boundaries using (?<!\w)literal(?!\w) where supported; fallback to \b if ok.
+						const pat = `(?<!\\w)` + escapeRegExp(literal) + `(?!\\w)`;
+						colOrs.push(`regexp(?, ${col})`);
+						parameters.push(pat);
+						// for display, show the original literal (not the regex pattern)
+						displayParams.push(literal);
+					} else {
+						colOrs.push(`lower(${col}) LIKE ?`);
+						const likeVal = '%' + term.toLowerCase() + '%';
+						parameters.push(likeVal);
+						displayParams.push(likeVal);
+					}
+				}
+				termClauses.push('(' + colOrs.join(' OR ') + ')');
+			}
+			whereSqlPieces.push('(' + termClauses.join(' AND ') + ')');
+		}
+
+		const whereSql = whereSqlPieces.join(' OR ');
+		const finalSql = `SELECT * FROM glossary WHERE ${whereSql} ORDER BY type, "group", priority`;
+
+		// Build a human-readable SQL for display by substituting parameter values into the query.
+		// We do NOT execute this display SQL; execution below uses parameterized statement to remain safe.
+		let displaySql = finalSql;
+		function escapeForDisplay(v) {
+			if (v === null || v === undefined) return "NULL";
+			// show as single-quoted SQL literal, escape single quotes inside
+			return "'" + String(v).replace(/'/g, "''") + "'";
+		}
+		for (let p of displayParams) {
+			// replace the first occurrence of ? with the quoted/escaped parameter for display
+			displaySql = displaySql.replace('?', escapeForDisplay(p));
+		}
+
+		const stmt2 = db.prepare(finalSql);
+		const rows2 = stmt2.all(...parameters);
+		res.json({ rows: rows2, transformedSql: displaySql });
+		return;
 	} catch (err) {
 		console.error('SQL exec error:', err);
 		res.status(500).json({ message: 'error', error: err.message });

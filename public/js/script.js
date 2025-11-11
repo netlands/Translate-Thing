@@ -250,6 +250,14 @@ ready(function(){ // $(document).ready(function () {
 			}).forceRender();
 
 			try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+				// show transformed SQL if provided by server, otherwise hide the element
+				try {
+					if (data && data.transformedSql) {
+						$('#transformedSql').text(data.transformedSql).show();
+					} else {
+						$('#transformedSql').hide().text('');
+					}
+				} catch (e) {}
 		});
 	});
 

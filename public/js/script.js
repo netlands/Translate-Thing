@@ -788,8 +788,7 @@ function placeRefreshInline() {
 		refreshContainer.style.display = 'inline-flex';
 		refreshContainer.style.alignItems = 'center';
 		refreshContainer.style.marginLeft = '8px';
-        // nudge the container down a few pixels so it aligns better with the input
-        refreshContainer.style.marginTop = '4px';
+
 
 		const btn = document.createElement('button');
 		btn.id = 'RefreshInline';
@@ -804,12 +803,16 @@ function placeRefreshInline() {
 		btn.style.justifyContent = 'center';
 		btn.style.borderRadius = '6px';
 		btn.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.05) inset';
+		// ensure the icon color is visible on the light button
+		btn.style.color = '#333';
 
-		// Clearer refresh SVG: single circular arc + arrowhead for readability
+		// Outlined/stroke refresh icon (clear at small sizes)
 		btn.innerHTML =
-			'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
-			+ '<path d="M21 12a9 9 0 11-6.9-8.77" />'
-			+ '<polyline points="21 3 21 9 15 9" />'
+			'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">'
+			+ '<polyline points="23 4 23 10 17 10"></polyline>'
+			+ '<polyline points="1 20 1 14 7 14"></polyline>'
+			+ '<path d="M3.51 9a9 9 0 0114.13-3.36L23 10"></path>'
+			+ '<path d="M20.49 15a9 9 0 01-14.13 3.36L1 14"></path>'
 			+ '</svg>';
 
 		btn.addEventListener('click', function (e) {

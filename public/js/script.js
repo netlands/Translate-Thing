@@ -787,9 +787,8 @@ function placeRefreshInline() {
 		refreshContainer.id = 'RefreshContainer';
 		refreshContainer.style.display = 'inline-flex';
 		refreshContainer.style.alignItems = 'center';
-		refreshContainer.style.marginLeft = '8px';
 
-
+		
 		const btn = document.createElement('button');
 		btn.id = 'RefreshInline';
 		btn.type = 'button';
@@ -804,15 +803,11 @@ function placeRefreshInline() {
 		btn.style.borderRadius = '6px';
 		btn.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.05) inset';
 		// ensure the icon color is visible on the light button
-		btn.style.color = '#333';
+		btn.style.color = '#808080ff';
 
 		// Outlined/stroke refresh icon (clear at small sizes)
-		btn.innerHTML =
-			'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">'
-			+ '<polyline points="23 4 23 10 17 10"></polyline>'
-			+ '<polyline points="1 20 1 14 7 14"></polyline>'
-			+ '<path d="M3.51 9a9 9 0 0114.13-3.36L23 10"></path>'
-			+ '<path d="M20.49 15a9 9 0 01-14.13 3.36L1 14"></path>'
+		btn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">'
+			+ '<path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.39-.47 2.66-1.25 3.68l1.46 1.46C19.07 15.72 20 13.95 20 12c0-4.42-3.58-8-8-8zm-6.75.32L3.79 5.78C2.93 6.86 2 8.63 2 10.5c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6 0-1.39.47-2.66 1.25-3.68z"/>'
 			+ '</svg>';
 
 		btn.addEventListener('click', function (e) {
@@ -824,6 +819,11 @@ function placeRefreshInline() {
 		refreshContainer.appendChild(btn);
 
 		// append to searchContainer
+		searchContainer.style.display = 'flex';
+    	searchContainer.style.justifyContent = 'space-between';
+ 	    searchContainer.style.alignItems = 'center';
+    	searchContainer.style.width = '100%';
+
 		searchContainer.appendChild(refreshContainer);
 
 		// Ensure an observer is watching a stable ancestor for DOM changes

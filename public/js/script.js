@@ -401,6 +401,9 @@ function renderGridFromRows(rows, term) {
 	// dispatch a resize event and schedule a second render to avoid visual staleness
 	try { window.dispatchEvent(new Event('resize')); } catch (e) {}
 	setTimeout(function () { try { grid.forceRender(); } catch (e) {} }, 120);
+
+	// ensure the inline refresh button is placed after rendering
+	try { placeRefreshInline(); } catch (e) {}
 }
 
 $(document).on('click', '#ShowDuplicates', function () {
@@ -746,3 +749,125 @@ function getFields(data) {
 
 	$('#myModalx').modal('show'); 
 }
+
+
+// Insert a small refresh button next to GridJS search input. Use a MutationObserver
+// to re-insert if GridJS replaces the search DOM on re-render.
+function placeRefreshInline() {
+	try {
+		// Avoid creating multiple buttons
+		if (document.getElementById('RefreshInline')) return;
+
+		// GridJS search container can be inside .gridjs-search or next to the input
+		const tableEl = document.getElementById('table');
+		if (!tableEl) return;
+
+		// Find a sensible attach point: first .gridjs-search element inside the table wrapper
+		const wrapper = tableEl.querySelector('.gridjs-wrapper') || tableEl;
+		let searchContainer = null;
+		if (wrapper) searchContainer = wrapper.querySelector('.gridjs-search');
+
+		// fallback: find input with class gridjs-search-input
+		if (!searchContainer && wrapper) {
+			const searchInput = wrapper.querySelector('.gridjs-search-input, .gridjs-input, input[type="search"]');
+			if (searchInput) searchContainer = searchInput.closest('.gridjs-search') || searchInput.parentElement;
+		}
+
+		// if still not found, try globally
+		if (!searchContainer) searchContainer = document.querySelector('.gridjs-search');
+
+		// If we still can't find a search container, ensure observer is watching and bail
+		if (!searchContainer) {
+			ensureRefreshObserver();
+			return;
+		}
+
+		// create container to right-align the button inside the search area
+		const refreshContainer = document.createElement('div');
+		refreshContainer.id = 'RefreshContainer';
+		refreshContainer.style.display = 'inline-flex';
+		refreshContainer.style.alignItems = 'center';
+		refreshContainer.style.marginLeft = '8px';
+        // nudge the container down a few pixels so it aligns better with the input
+        refreshContainer.style.marginTop = '4px';
+
+		const btn = document.createElement('button');
+		btn.id = 'RefreshInline';
+		btn.type = 'button';
+		btn.title = 'Refresh table';
+		btn.className = 'btn btn-light';
+		btn.style.width = '40px';
+		btn.style.height = '40px';
+		btn.style.padding = '6px';
+		btn.style.display = 'inline-flex';
+		btn.style.alignItems = 'center';
+		btn.style.justifyContent = 'center';
+		btn.style.borderRadius = '6px';
+		btn.style.boxShadow = '0 0 0 1px rgba(0,0,0,0.05) inset';
+
+		// Clearer refresh SVG: single circular arc + arrowhead for readability
+		btn.innerHTML =
+			'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+			+ '<path d="M21 12a9 9 0 11-6.9-8.77" />'
+			+ '<polyline points="21 3 21 9 15 9" />'
+			+ '</svg>';
+
+		btn.addEventListener('click', function (e) {
+			e.preventDefault();
+			// same functionality as Update table
+			try { updateTable(''); } catch (err) { console.error(err); }
+		});
+
+		refreshContainer.appendChild(btn);
+
+		// append to searchContainer
+		searchContainer.appendChild(refreshContainer);
+
+		// Ensure an observer is watching a stable ancestor for DOM changes
+		ensureRefreshObserver();
+	} catch (err) {
+		console.error('placeRefreshInline failed', err);
+	}
+}
+
+function ensureRefreshObserver() {
+	try {
+		if (window._refreshObserver) return;
+		// Observe a stable ancestor (table container or body) so we notice re-renders
+		const root = document.getElementById('table') ? document.getElementById('table').parentElement || document.body : document.body;
+		const observer = new MutationObserver(function (mutations) {
+			for (const m of mutations) {
+				// If nodes added include a search area, re-run placement
+				for (const n of m.addedNodes) {
+					if (n.nodeType !== 1) continue;
+					if (n.classList && n.classList.contains('gridjs-search')) {
+						setTimeout(placeRefreshInline, 60);
+						return;
+					}
+					try {
+						if (n.querySelector && n.querySelector('.gridjs-search')) {
+							setTimeout(placeRefreshInline, 60);
+							return;
+						}
+					} catch (e) {}
+				}
+				// If our RefreshInline was removed, try to re-insert
+				for (const n of m.removedNodes) {
+					if (n.nodeType !== 1) continue;
+					if (n.querySelector && n.querySelector('#RefreshInline')) {
+						setTimeout(placeRefreshInline, 60);
+						return;
+					}
+				}
+			}
+		});
+		observer.observe(root, { childList: true, subtree: true });
+		window._refreshObserver = observer;
+	} catch (err) {
+		console.error('ensureRefreshObserver failed', err);
+	}
+}
+
+// Try initial placement after load and schedule a couple attempts to cover timing
+setTimeout(placeRefreshInline, 200);
+window.addEventListener('load', function () { setTimeout(placeRefreshInline, 300); });

@@ -51,3 +51,18 @@ td {
 td:hover {
 	color: #000;
 }
+
+/* Inline refresh button next to GridJS search */
+#RefreshInline {
+	width: 40px !important;
+	height: 40px !important;
+	padding: 6px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: 6px !important;
+}
+
+#RefreshContainer {
+	margin-left: 8px;
+}

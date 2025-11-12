@@ -14,7 +14,7 @@ const TOKEN_PATH = path.join(__dirname, 'tokens.json');
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
 // 🚀 Main function
-async function postToBlogger(postData) {
+async function postToBlogger(postData, isDraft = true) {
 
   // 🔁 Load or request tokens
   if (fs.existsSync(TOKEN_PATH)) {
@@ -37,6 +37,7 @@ async function postToBlogger(postData) {
   try {
     const res = await blogger.posts.insert({
       blogId: BLOG_ID,
+      isDraft: isDraft,
       requestBody: {
         title: postData.title,
         content: postData.content,

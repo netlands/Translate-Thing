@@ -439,7 +439,7 @@ $(document).on('click', '#ShowDuplicates', function () {
 document.addEventListener('DOMContentLoaded', function () {
 	const tableContainer = document.getElementById('table');
 	const menu = document.getElementById('glossary-context-menu');
-	let currentRowData = { en: '', ja: '' };
+	let currentRowData = { en: '', ja: '', id: '' };
 
 	// Helper to hide menu
 	function hideMenu() {
@@ -499,20 +499,14 @@ document.addEventListener('DOMContentLoaded', function () {
 		// prevent default browser menu
 		e.preventDefault();
 
-		// get cells: en, ja and id (if present in a hidden column)
+		// The data is now set by the getFields (left-click) function.
+		// We just need to read it here.
+		// We also need to get the en/ja terms for the fallback logic.
 		const tds = el.querySelectorAll('td');
-		if (!tds || tds.length < 2) {
-			return;
+		if (tds && tds.length > 1) {
+			currentRowData.en = tds[0].innerText.trim();
+			currentRowData.ja = tds[1].innerText.trim();
 		}
-		const en = tds[0].innerText.trim();
-		const ja = tds[1].innerText.trim();
-		// try to get id from last cell
-		const idCell = tds[tds.length - 1];
-		let rowId = '';
-		if (idCell) {
-			rowId = idCell.innerText.trim();
-		}
-		currentRowData = { en: en, ja: ja, id: rowId };
 
 		// position and show menu
 		menu.style.left = e.pageX + 'px';
@@ -532,6 +526,69 @@ document.addEventListener('DOMContentLoaded', function () {
 			navigator.clipboard.writeText(currentRowData.ja).then(function () {
 				console.log('Copied JA:', currentRowData.ja);
 			});
+		} else if (action === 'create-page') {
+			// Use the same robust ID-finding logic as the delete function.
+			function doCreatePage(entryData) {
+				if (!entryData) {
+					alert('Could not fetch entry data.');
+					return;
+				}
+				// Call the create-glossary-page API
+				$.ajax({
+					url: '/api/create-glossary-page',
+					type: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify(entryData),
+				}).done(function(response) {
+					// Copy to clipboard and show confirmation
+					navigator.clipboard.writeText(response.html).then(function() {
+						$('#confirmationModalBody').text('Glossary entry created');
+						$('#confirmationModal').modal('show');
+					}).catch(function(err) {
+						console.error('Failed to copy to clipboard:', err);
+						alert('Failed to copy HTML to clipboard.');
+					});
+				}).fail(function(xhr) {
+					let msg = 'Error creating glossary page.';
+					try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
+					alert(msg);
+				});
+			}
+
+			// First, try to use the ID directly if it looks like a valid number.
+			if (currentRowData.id && /^\d+$/.test(currentRowData.id)) {
+				$.ajax({
+					url: '/api/execsql',
+					type: 'POST',
+					data: { sql: `SELECT * FROM glossary WHERE id = ?`, params: [currentRowData.id] },
+				}).done(function (data) {
+					if (data && data.rows && data.rows.length > 0) {
+						doCreatePage(data.rows[0]);
+					} else {
+						alert('Could not fetch entry data with the provided ID.');
+					}
+				});
+			} else {
+				// Fallback: Find the ID by matching 'en' and 'ja' terms, just like the delete function.
+				$.ajax({
+					url: '/api/getrows',
+					data: { term: currentRowData.en },
+				}).done(function (data) {
+					const rows = data.rows || [];
+					let foundEntry = null;
+					for (let i = 0; i < rows.length; i++) {
+						if (rows[i].en === currentRowData.en && rows[i].ja === currentRowData.ja) {
+							foundEntry = rows[i];
+							break;
+						}
+					}
+					if (foundEntry) {
+						doCreatePage(foundEntry);
+					} else {
+						alert('Could not find a matching entry in the database.');
+					}
+				});
+			}
 		} else if (action === 'delete-entry') {
 			// confirm and call delete API. If id is missing in the DOM, try to find it via /api/gettable
 			function doDelete(idToDelete) {
@@ -733,7 +790,7 @@ function getFields(data) {
 	note = cells[10]["data"]; 
 	id = cells[11]["data"];
 	console.log(id);
-
+	
 	document.getElementById("enx").value = en;
 	document.getElementById("jax").value = ja;
 	document.getElementById("furiganax").value = furigana;
@@ -747,6 +804,8 @@ function getFields(data) {
 	document.getElementById("notex").value = note;
 	document.getElementById("idx").value = id;
 
+	// This is now the single source of truth for the context menu.
+	currentRowData = { en, ja, id };
 	$('#myModalx').modal('show'); 
 }
 

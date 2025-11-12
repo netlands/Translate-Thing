@@ -3,6 +3,9 @@ var app = express();
 var cors = require('cors')
 var path = require('path');
 var hepburn = require("hepburn");
+
+const { postToBlogger } = require('./bloggerPoster');
+
 // body parser for POST
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -752,4 +755,122 @@ function getLocalIp() {
 	}
 }
 
-/* todo: create a function that converts romnjo
+app.post('/api/create-glossary-page', function (req, res) {
+	const entry = req.body;
+	if (!entry) {
+		return res.status(400).json({ message: 'Glossary entry data is missing.' });
+	}
+
+	const templatePath = 'glossary-template.html';
+	let templateContent = "";
+	try {
+		templateContent = fs.readFileSync(templatePath, 'utf-8');
+	} catch (error) {
+		console.error('Error reading glossary template file:', error);
+		return res.status(500).json({ message: 'Error reading template file' });
+	}
+
+	// Replace placeholders
+	let generatedHtml = templateContent
+		.replace(/%en%/g, entry.en || '')
+		.replace(/%ja%/g, entry.ja || '')
+		.replace(/%furigana%/g, entry.furigana || '')
+		.replace(/%romaji%/g, entry.romaji || '')
+		.replace(/%type%/g, entry.type || '')
+		.replace(/%group%/g, entry.group || '')
+		.replace(/%$context%/g, entry.context || '');
+
+	// Handle special placeholders
+	generatedHtml = generatedHtml.replace(/%\$hepburn%/g, kanaToModernHepburn(entry.furigana || ''));
+
+	const note = entry.note || '';
+	const moreIndex = note.indexOf('<!--more-->');
+	const summary = moreIndex !== -1 ? note.substring(0, moreIndex) : note;
+	const content = moreIndex !== -1 ? note.substring(moreIndex + '<!--more-->'.length) : '';
+	generatedHtml = generatedHtml.replace(/%\$summary%/g, summary).replace(/%\$content%/g, content);
+
+	res.json({ html: generatedHtml });
+});
+
+/**
+ * Converts kana to modern Hepburn romanization with macrons and proper n’ handling.
+ * @param {string} kana - Japanese kana (hiragana or katakana)
+ * @returns {string} - Proper Hepburn romanization with macrons (lowercase)
+ */
+function kanaToModernHepburn(kana) {
+  let romaji = hepburn.fromKana(kana);
+  romaji = hepburn.cleanRomaji(romaji);
+  romaji = romaji.toLowerCase();
+
+  romaji = romaji
+    .replace(/aa/g, "ā")
+    .replace(/ii/g, "ī")
+    .replace(/uu/g, "ū")
+    .replace(/ee/g, "ē")
+    .replace(/ou/g, "ō")
+    .replace(/oo/g, "ō");
+
+  return romaji;
+}
+
+
+
+/**
+ * Creates a pronunciation entry from kana input.
+ * Outputs kana, Hepburn romanization, and moraic phonetic guide with dynamic doubled consonants.
+ * @param {string} kana - Japanese kana (hiragana or katakana)
+ * @returns {object} - { kana, hepburn, phonetic }
+ */
+function createPronunciationEntry(kana) {
+  // Step 1: Hepburn romanization with macrons
+  let romaji = hepburn.cleanRomaji(hepburn.fromKana(kana)).toLowerCase();
+  const hepburnRomaji = romaji
+    .replace(/aa/g, "ā")
+    .replace(/ii/g, "ī")
+    .replace(/uu/g, "ū")
+    .replace(/ee/g, "ē")
+    .replace(/ou/g, "ō")
+    .replace(/oo/g, "ō");
+
+  // Step 2: Moraic phonetic guide with dynamic sokuon handling
+  const kanaTokens = wanakana.tokenize(kana, { detailed: false });
+  const phoneticMorae = [];
+
+  for (let i = 0; i < kanaTokens.length; i++) {
+    const k = kanaTokens[i];
+
+    if (k === "っ") {
+      const nextKana = kanaTokens[i + 1];
+      const nextRomaji = hepburn.fromKana(nextKana).toLowerCase();
+      const doubled = nextRomaji[0] || "k"; // fallback to "k" if undefined
+      phoneticMorae.push(`${doubled}${doubled}`);
+      continue;
+    }
+
+    const r = hepburn.fromKana(k).toLowerCase();
+    const phonetic = r
+      .replace(/n(?=[bmp])/g, "m")   // nasal assimilation
+      .replace(/ā/g, "aa")
+      .replace(/ī/g, "ee")
+      .replace(/ū/g, "oo")
+      .replace(/ē/g, "eh")
+      .replace(/ō/g, "ooh")
+      .replace(/n’/g, "n-");
+
+    phoneticMorae.push(phonetic);
+  }
+
+  const phonetic = phoneticMorae.join("-");
+
+  return {
+    kana,
+    hepburn: hepburnRomaji,
+    phonetic
+  };
+}
+
+
+
+
+
+

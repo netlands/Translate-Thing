@@ -4,7 +4,7 @@ var cors = require('cors')
 var path = require('path');
 var hepburn = require("hepburn");
 
-const { postToBlogger } = require('./bloggerPoster');
+const { postToBlogger, oauth2Client } = require('./bloggerPoster');
 
 // body parser for POST
 app.use(express.json());
@@ -124,6 +124,26 @@ app.get('/api/template', function (req, res) {
 	});
 });
 
+// Add the OAuth 2.0 callback route to handle Google's redirect
+app.get('/oauth2callback', async (req, res) => {
+	const { code } = req.query;
+	if (!code) {
+		return res.status(400).send('Authorization code is missing.');
+	}
+	try {
+		// Exchange the code for tokens
+		const { tokens } = await oauth2Client.getToken(code);
+		oauth2Client.setCredentials(tokens);
+
+		// Save the tokens to a file for future use
+		fs.writeFileSync(path.join(__dirname, 'tokens.json'), JSON.stringify(tokens));
+		console.log('✅ Tokens saved successfully.');
+		res.send('<script>alert("Authentication successful! You can now close this tab and try posting again."); window.close();</script>');
+	} catch (error) {
+		console.error('❌ Error getting tokens:', error);
+		res.status(500).send('Failed to retrieve access token.');
+	}
+});
 
 app.get('/api/addterm', function (req, res) {
 	// console.log(req.query);
@@ -792,6 +812,30 @@ app.post('/api/create-glossary-page', function (req, res) {
 	res.json({ html: generatedHtml });
 });
 
+app.post('/api/post-to-blogger', async function (req, res) {
+	// Use the hardcoded sample postData as requested for now.
+	const postData = {
+		title: 'This is the test post title',
+		content: '<p>This is the test post content</p>',
+		labels: ['label1', 'label2', 'test'],
+	};
+
+	try {
+		// Call the existing postToBlogger function
+		const result = await postToBlogger(postData);
+		res.json({ message: 'Successfully posted to glossary!', result: result });
+	} catch (error) {
+		// If the error is an authentication error, send the auth URL to the client
+		if (error.authUrl) {
+			console.log('Authentication required. Sending auth URL to client.');
+			return res.status(401).json({ message: 'Authentication required.', authUrl: error.authUrl });
+		}
+		// For other errors, send a generic server error
+		console.error('Error posting to Blogger:', error.message);
+		res.status(500).json({ message: 'Failed to post to glossary.', error: error.message });
+	}
+});
+
 /**
  * Converts kana to modern Hepburn romanization with macrons and proper n’ handling.
  * @param {string} kana - Japanese kana (hiragana or katakana)
@@ -869,8 +913,11 @@ function createPronunciationEntry(kana) {
   };
 }
 
+// const postData = {
+//   title: 'This is the post title',
+//   content: '<p>This is the post content</p>',
+//   labels: ['label1', 'label2', 'label3'],
+// };
 
-
-
-
-
+// // Usage:
+// postToBlogger(postData);

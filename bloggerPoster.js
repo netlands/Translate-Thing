@@ -11,39 +11,25 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 const BLOG_ID = process.env.BLOG_ID;
 const TOKEN_PATH = path.join(__dirname, 'tokens.json');
 
+const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
+
 // 🚀 Main function
 async function postToBlogger(postData) {
-  const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
   // 🔁 Load or request tokens
   if (fs.existsSync(TOKEN_PATH)) {
     const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
     oauth2Client.setCredentials(tokens);
   } else {
+    // If no tokens, we need to authenticate.
+    // Generate the auth URL and throw an error to signal this to the caller.
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: ['https://www.googleapis.com/auth/blogger'],
     });
-
-    console.log('🔗 Authorize this app by visiting this URL:', authUrl);
-    await open(authUrl);
-
-    const readline = require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    const code = await new Promise((resolve) =>
-      readline.question('Enter the code from the page: ', (code) => {
-        readline.close();
-        resolve(code);
-      })
-    );
-
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
-    fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens));
-    console.log('🔐 Tokens saved for future use.');
+    const error = new Error('Authentication required.');
+    error.authUrl = authUrl;
+    throw error;
   }
 
   const blogger = google.blogger({ version: 'v3', auth: oauth2Client });
@@ -58,12 +44,14 @@ async function postToBlogger(postData) {
       },
     });
     console.log('✅ Post published:', res.data.url);
+    return res.data; // Resolve the promise with the result
   } catch (err) {
     console.error('❌ Failed to publish post:', err.message);
+    throw err; // Re-throw the error to be caught by the caller
   }
 }
 
-module.exports = { postToBlogger };
+module.exports = { postToBlogger, oauth2Client };
 
 /*
 // Sample post input:

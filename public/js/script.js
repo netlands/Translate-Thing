@@ -589,6 +589,35 @@ document.addEventListener('DOMContentLoaded', function () {
 					}
 				});
 			}
+		} else if (action === 'post-to-glossary') {
+			// 1. Add a confirmation before posting
+			if (!confirm('Are you sure you want to post this to the glossary blog?')) {
+				return;
+			}
+
+			// Show a temporary "posting..." message in the modal
+			$('#confirmationModalBody').text('Posting to glossary...');
+			$('#confirmationModal').modal('show');
+
+			// 2. Call the new backend endpoint
+			$.ajax({
+				url: '/api/post-to-blogger',
+				type: 'POST',
+			}).done(function(response) {
+				// 3. Show a confirmation dialog when the post is complete
+				$('#confirmationModalBody').text('Successfully posted to glossary!');
+			}).fail(function(xhr) {
+				// Check if this is an authentication error
+				if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.authUrl) {
+					// Redirect the user to the authentication URL
+					$('#confirmationModal').modal('hide');
+					window.open(xhr.responseJSON.authUrl, '_blank');
+				} else {
+					let msg = 'Failed to post to glossary.';
+					try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
+					$('#confirmationModalBody').text(msg);
+				}
+			});
 		} else if (action === 'delete-entry') {
 			// confirm and call delete API. If id is missing in the DOM, try to find it via /api/gettable
 			function doDelete(idToDelete) {

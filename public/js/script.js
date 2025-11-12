@@ -1,5 +1,14 @@
 // console.log("connected");
 
+function toTitleCase(str) {
+	if (!str) return '';
+	return str.replace(
+		/\w\S*/g,
+		function(txt) {
+			return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+		}
+	);
+}
 function ready(fn) {
 	// $(document).ready(function () { ... })
 	if (document.readyState !== 'loading') {
@@ -540,14 +549,17 @@ document.addEventListener('DOMContentLoaded', function () {
 					contentType: 'application/json',
 					data: JSON.stringify(entryData),
 				}).done(function(response) {
-					// Copy to clipboard and show confirmation
-					navigator.clipboard.writeText(response.html).then(function() {
-						$('#confirmationModalBody').text('Glossary entry created');
-						$('#confirmationModal').modal('show');
-					}).catch(function(err) {
-						console.error('Failed to copy to clipboard:', err);
-						alert('Failed to copy HTML to clipboard.');
-					});
+					$('#confirmationModal .modal-title').text(toTitleCase(entryData.en));
+					// CSS from glossary.css to style the preview
+					const glossaryCss = `
+						.japanese { color: orange; }
+						.tags { color: gray; }
+					`;
+					const styleBlock = `<style>${glossaryCss}</style>`;
+
+					// Show the rendered HTML in a modal dialog with inline styles
+					$('#confirmationModalBody').html(styleBlock + response.html);
+					$('#confirmationModal').modal('show');
 				}).fail(function(xhr) {
 					let msg = 'Error creating glossary page.';
 					try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}

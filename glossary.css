@@ -1,7 +1,21 @@
 .japanese {
     color: orange;
+    font-size: 18px;
 }
 
 .tags {
     color: gray;
 }
+
+.tag {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  margin: 0.1em;
+  background-color: #e0e0e0;
+  color: #333;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 0.4em;
+  white-space: nowrap;
+}
+

@@ -547,27 +547,23 @@ document.addEventListener('DOMContentLoaded', function () {
 					alert('Could not fetch entry data.');
 					return;
 				}
-				// Call the create-glossary-page API
-				$.ajax({
-					url: '/api/create-glossary-page',
-					type: 'POST',
-					contentType: 'application/json',
-					data: JSON.stringify(entryData),
-				}).done(function(response) {
+
+				// Fetch both the HTML for the page and the CSS to style it
+				const getHtml = $.ajax({ url: '/api/create-glossary-page', type: 'POST', contentType: 'application/json', data: JSON.stringify(entryData) });
+				const getCss = $.get('/api/glossary-css');
+
+				$.when(getHtml, getCss).done(function(htmlResponse, cssResponse) {
+					const pageHtml = htmlResponse[0].html;
+					const glossaryCss = cssResponse[0];
+
 					$('#confirmationModal .modal-title').text(toTitleCase(entryData.en));
-					// CSS from glossary.css to style the preview
-					const glossaryCss = `
-						.japanese { color: orange; }
-						.tags { color: gray; }
-					`;
 					const styleBlock = `<style>${glossaryCss}</style>`;
 
 					// Show the rendered HTML in a modal dialog with inline styles
-					$('#confirmationModalBody').html(styleBlock + response.html);
+					$('#confirmationModalBody').html(styleBlock + pageHtml);
 					$('#confirmationModal').modal('show');
-				}).fail(function(xhr) {
+				}).fail(function() {
 					let msg = 'Error creating glossary page.';
-					try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
 					alert(msg);
 				});
 			}
@@ -621,8 +617,13 @@ document.addEventListener('DOMContentLoaded', function () {
 				url: '/api/post-to-blogger',
 				type: 'POST',
 			}).done(function(response) {
-				// 3. Show a confirmation dialog when the post is complete
-				$('#confirmationModalBody').text('Successfully posted to glossary!');
+				// 3. Show a confirmation dialog with the post ID
+				let successMsg = 'Successfully posted to glossary!';
+				if (response && response.result && response.result.id) {
+					const postId = response.result.id;
+					successMsg += ` (${postId})`;
+				}
+				$('#confirmationModalBody').text(successMsg);
 			}).fail(function(xhr) {
 				// Check if this is an authentication error
 				if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.authUrl) {

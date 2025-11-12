@@ -792,24 +792,55 @@ app.post('/api/create-glossary-page', function (req, res) {
 
 	// Replace placeholders
 	let generatedHtml = templateContent
-		.replace(/%en%/g, entry.en || '')
-		.replace(/%ja%/g, entry.ja || '')
-		.replace(/%furigana%/g, entry.furigana || '')
-		.replace(/%romaji%/g, entry.romaji || '')
-		.replace(/%type%/g, entry.type || '')
-		.replace(/%group%/g, entry.group || '')
-		.replace(/%$context%/g, entry.context || '');
+		.replace(/%en%/g, '<span class="en">' + entry.en + '</span>' || '')
+		.replace(/%ja%/g, '<span class="ja">' + entry.ja + '</span>' || '')
+		.replace(/%romaji%/g, '<span class="romaji">' + entry.romaji + '</span>' || '')		
+		.replace(/%type%/g, (entry.type || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
+		.replace(/%group%/g, (entry.group || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
+		.replace(/%context%/g, (entry.context || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
+
+		if (entry.ja != entry.furigana) {
+			generatedHtml = generatedHtml.replace(/%furigana%/g, '<span class="furigana">' + entry.furigana + '</span>' || '')
+		} else {generatedHtml = generatedHtml.replace(/%furigana%/g,''); }
 
 	// Handle special placeholders
-	generatedHtml = generatedHtml.replace(/%\$hepburn%/g, kanaToModernHepburn(entry.furigana || ''));
+	if (kanaToModernHepburn(entry.furigana) != entry.romaji) {
+		generatedHtml = generatedHtml.replace(/%hepburn%/g, '<span class="hepburn">' + kanaToModernHepburn(entry.furigana || '') + '</span>');
+	} else { generatedHtml = generatedHtml.replace(/%hepburn%/g,''); }
+
+	// clean up multiple dots
+	generatedHtml = generatedHtml
+		.replace(/・{2,}/g, "")      // Remove 2 or more consecutive "・"
+		.replace(/・(?=<\/)/g, '');
+
+
+
+
 
 	const note = entry.note || '';
-	const moreIndex = note.indexOf('<!--more-->');
-	const summary = moreIndex !== -1 ? note.substring(0, moreIndex) : note;
-	const content = moreIndex !== -1 ? note.substring(moreIndex + '<!--more-->'.length) : '';
-	generatedHtml = generatedHtml.replace(/%\$summary%/g, summary).replace(/%\$content%/g, content);
+	const paragraphs = (note || '').trim().split(/\r?\n+/).map(p => p.trim()).filter(Boolean);
+
+	const summary = `<p class="summary">${paragraphs[0] || ''}</p>`;
+	const content = paragraphs.length > 1
+	? paragraphs.slice(1).map(p => `<p>${p}</p>`).join('\n'): '';
+
+
+
+	generatedHtml = generatedHtml.replace(/%summary%/g, summary).replace(/%content%/g, content);
 
 	res.json({ html: generatedHtml });
+});
+
+app.get('/api/glossary-css', function (req, res) {
+	const cssPath = path.join(__dirname, 'glossary.css');
+	fs.readFile(cssPath, 'utf8', (err, data) => {
+		if (err) {
+			console.error('Error reading glossary.css:', err);
+			return res.status(500).send('Could not load styles.');
+		}
+		res.setHeader('Content-Type', 'text/css');
+		res.send(data);
+	});
 });
 
 app.post('/api/post-to-blogger', async function (req, res) {

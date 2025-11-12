@@ -253,7 +253,8 @@ ready(function(){ // $(document).ready(function () {
 
 			grid.updateConfig({
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
-					{ name: 'id', hidden: true }
+					{ name: 'postId', hidden: true },
+					{ name: 'id', hidden: true },
 				],
 				height: '500px'
 			}).forceRender();
@@ -297,7 +298,8 @@ function updateTable(term) {
 			}).render(document.getElementById('table'));
 			grid.updateConfig({
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
-					{ name: 'id', hidden: true }
+					{ name: 'postId', hidden: true },
+					{ name: 'id', hidden: true },
 				],
 				height: '500px'
 			}).forceRender();
@@ -352,7 +354,8 @@ function updateTable(term) {
 			// hide id field
 			grid.updateConfig({			
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
-					{ name : "id",
+					{ name: 'postId', hidden: true },
+					{ name: "id",
 					hidden: true },
 				],
 				height: '500px'
@@ -394,7 +397,8 @@ function renderGridFromRows(rows, term) {
 	}).render(document.getElementById('table'));
 	grid.updateConfig({
 		columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
-			{ name: 'id', hidden: true }
+			{ name: 'postId', hidden: true },
+			{ name: 'id', hidden: true },
 		],
 		height: '500px'
 	}).forceRender();
@@ -484,7 +488,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 			grid.updateConfig({
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
-					{ name: 'id', hidden: true }
+					{ name: 'postId', hidden: true },
+					{ name: 'id', hidden: true },
 				],
 				height: '500px'
 			}).forceRender();
@@ -831,6 +836,9 @@ function getFields(data) {
 	note = cells[10]["data"]; 
 	id = cells[11]["data"];
 	console.log(id);
+	postId = cells[11]["data"];
+	id = cells[12]["data"];
+	console.log("id:", id, "postId:", postId);
 	
 	document.getElementById("enx").value = en;
 	document.getElementById("jax").value = ja;

@@ -820,14 +820,15 @@ app.post('/api/create-glossary-page', function (req, res) {
 	const note = entry.note || '';
 	const paragraphs = (note || '').trim().split(/\r?\n+/).map(p => p.trim()).filter(Boolean);
 
-	const summary = `<p class="summary">${paragraphs[0] || ''}</p>`;
+	const summary = `<p class="summary">%en2%${paragraphs[0] || '%en2%'}</p>`;
 	const content = paragraphs.length > 1
 	? paragraphs.slice(1).map(p => `<p>${p}</p>`).join('\n'): '';
 
 
-
 	generatedHtml = generatedHtml.replace(/%summary%/g, summary).replace(/%content%/g, content);
-
+	generatedHtml = generatedHtml.replace(/%en2%/g, '<span class="literal-meaning">' + entry.en2 + '</span>. ' || '')
+	
+	generatedHtml = generatedHtml.replace(/%[a-z0-9-]+%/g, '');
 	res.json({ html: generatedHtml });
 });
 

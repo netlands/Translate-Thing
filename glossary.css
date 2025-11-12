@@ -19,3 +19,6 @@
   white-space: nowrap;
 }
 
+.literal-meaning {
+    font-weight: bold;
+}

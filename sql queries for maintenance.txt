@@ -1,0 +1,2 @@
+// search for items with multiple entries seperated by commas
+SELECT * FROM glossary WHERE en2 LIKE '%,%';

@@ -799,8 +799,14 @@ function getTranslation(term) {
 			return part1
 		}
 	} else {
-		const row2 = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority').get(term, term, term);
-		if (row2 !== undefined) {
+	const row2 = db.prepare(`
+	SELECT * FROM glossary
+	WHERE en = ? COLLATE NOCASE
+		OR romaji = ? COLLATE NOCASE
+		OR ', ' || LOWER(en2) || ', ' LIKE '%, ' || LOWER(?) || ', %'
+	ORDER BY priority
+	`).get(term, term, term);
+	if (row2 !== undefined) {
 			return row2.ja;
 		} else {
 			return term;

@@ -2,7 +2,39 @@ var express = require('express');
 var app = express();
 var cors = require('cors')
 var path = require('path');
-var hepburn = require("hepburn");
+
+const { default: Kuroshiro } = require("kuroshiro");
+const KuromojiAnalyzer = require("kuroshiro-analyzer-kuromoji");
+
+const kuroshiro = new Kuroshiro();
+
+async function kanaToModernHepburn(kana) {
+  var romaji = await kuroshiro.convert(kana, {
+  to: "romaji",
+  mode: "normal",
+  romajiSystem: "hepburn"
+  });
+
+  // Replace "wa" not at start with "ha"
+  romaji = romaji.replace(/(?<!^)wa/g, 'ha');
+
+	// fix possible incorrect converted particles
+	romaji = romaji.replace(/wa/g, (_, i) => kana[i] === 'は' ? 'ha' : 'wa')
+    romaji = romaji.replace(/\be\b/g, (_, i) => kana[i] === 'へ' ? 'he' : 'e')
+    romaji = romaji.replace(/\bo\b/g, (_, i) => kana[i] === 'を' ? 'wo' : 'o');
+
+  // fix Katakana N to M
+  const katakanaOnly = /^[\u30A0-\u30FFー\s]+$/.test(kana);
+  if (!katakanaOnly) return romaji;
+
+  // Replace 'm' before b/m/p with 'n' (only at word boundaries or after vowels)
+  return romaji.replace(/([aeiou])m([bmp])/gi, "$1n$2");
+}
+
+
+
+
+
 
 const { postToBlogger, oauth2Client } = require('./bloggerPoster');
 
@@ -49,6 +81,8 @@ app.use('/js', express.static(__dirname + '/node_modules/bootstrap-select/dist/j
 app.use('/css', express.static(__dirname + '/node_modules/bootstrap-select/dist/css')); // redirect bootstrap-select
 app.use('/js', express.static(__dirname + '/node_modules/wanakana/umd')); // redirect wanakana
 
+app.use('/js/kuroshiro', express.static(path.join(__dirname, 'node_modules/kuroshiro/dist')));
+app.use('/js/kuroshiro-analyzer-kuromoji', express.static(path.join(__dirname, 'node_modules/kuroshiro-analyzer-kuromoji/dist')));
 
 
 app.use('/favicon.ico', express.static(__dirname + '/public/img/favicon.ico'));
@@ -60,12 +94,24 @@ app.get('/', function (req, res) {
 	});
 });
 
-// start server
-app.listen(3000, function () {
-	console.log('App active on http://127.0.0.1:3000 and http://' + getLocalIp() + ':3000');
-	console.log('You can minimize this window while using the application.');
-	open('http://127.0.0.1:3000');
-});
+// Initialize dependencies and start the server
+async function startServer() {
+    try {
+        console.log('⏳ Initializing Kuroshiro...');
+        await kuroshiro.init(new KuromojiAnalyzer());
+        console.log('✅ Kuroshiro initialized successfully.');
+
+        app.listen(3000, function () {
+            console.log('🚀 App active on http://127.0.0.1:3000 and http://' + getLocalIp() + ':3000');
+            console.log('You can minimize this window while using the application.');
+            open('http://127.0.0.1:3000');
+        });
+    } catch (e) {
+        console.error('❌ Server startup failed:', e);
+    }
+}
+
+startServer();
 
 
 app.get('/api/translate', function (req, res) {
@@ -775,7 +821,7 @@ function getLocalIp() {
 	}
 }
 
-app.post('/api/create-glossary-page', function (req, res) {
+app.post('/api/create-glossary-page', async function (req, res) {
 	const entry = req.body;
 	if (!entry) {
 		return res.status(400).json({ message: 'Glossary entry data is missing.' });
@@ -812,16 +858,17 @@ app.post('/api/create-glossary-page', function (req, res) {
 		} else {generatedHtml = generatedHtml.replace(/%furigana%/g,''); }
 
 	// Handle special placeholders
-	if (kanaToModernHepburn(entry.furigana) != entry.romaji) {
-		generatedHtml = generatedHtml.replace(/%hepburn%/g, '<span class="hepburn">' + kanaToModernHepburn(entry.furigana || '') + '</span>');
+	const hepburn = await kanaToModernHepburn(entry.furigana || '');
+	if (hepburn !== entry.romaji) {
+		generatedHtml = generatedHtml.replace(/%hepburn%/g, '<span class="hepburn">' + hepburn + '</span>');
 	} else { generatedHtml = generatedHtml.replace(/%hepburn%/g,''); }
 
 	// clean up multiple dots
 	generatedHtml = generatedHtml
-		.replace(/・{2,}/g, "")      // Remove 2 or more consecutive "・"
-		.replace(/・(?=<\/)/g, '');
+		.replace(/・{2,}/g, "・")      // Change 2 or more consecutive "・"
+		.replace(/・(?=<\/)/g, '');	   // Remove "・" before a closing tag
 
-
+	// Process note into summary and content  
 	const note = entry.note || '';
 	const paragraphs = (note || '').trim().split(/\r?\n+/).map(p => p.trim()).filter(Boolean);
 
@@ -873,83 +920,6 @@ app.post('/api/post-to-blogger', async function (req, res) {
 	}
 });
 
-/**
- * Converts kana to modern Hepburn romanization with macrons and proper n’ handling.
- * @param {string} kana - Japanese kana (hiragana or katakana)
- * @returns {string} - Proper Hepburn romanization with macrons (lowercase)
- */
-function kanaToModernHepburn(kana) {
-  let romaji = hepburn.fromKana(kana);
-  romaji = hepburn.cleanRomaji(romaji);
-  romaji = romaji.toLowerCase();
-
-  romaji = romaji
-    .replace(/aa/g, "ā")
-    .replace(/ii/g, "ī")
-    .replace(/uu/g, "ū")
-    .replace(/ee/g, "ē")
-    .replace(/ou/g, "ō")
-    .replace(/oo/g, "ō");
-
-  return romaji;
-}
-
-
-
-
-/**
- * Creates a pronunciation entry from kana input.
- * Outputs kana, Hepburn romanization, and moraic phonetic guide with dynamic doubled consonants.
- * @param {string} kana - Japanese kana (hiragana or katakana)
- * @returns {object} - { kana, hepburn, phonetic }
- */
-function createPronunciationEntry(kana) {
-  // Step 1: Hepburn romanization with macrons
-  let romaji = hepburn.cleanRomaji(hepburn.fromKana(kana)).toLowerCase();
-  const hepburnRomaji = romaji
-    .replace(/aa/g, "ā")
-    .replace(/ii/g, "ī")
-    .replace(/uu/g, "ū")
-    .replace(/ee/g, "ē")
-    .replace(/ou/g, "ō")
-    .replace(/oo/g, "ō");
-
-  // Step 2: Moraic phonetic guide with dynamic sokuon handling
-  const kanaTokens = wanakana.tokenize(kana, { detailed: false });
-  const phoneticMorae = [];
-
-  for (let i = 0; i < kanaTokens.length; i++) {
-    const k = kanaTokens[i];
-
-    if (k === "っ") {
-      const nextKana = kanaTokens[i + 1];
-      const nextRomaji = hepburn.fromKana(nextKana).toLowerCase();
-      const doubled = nextRomaji[0] || "k"; // fallback to "k" if undefined
-      phoneticMorae.push(`${doubled}${doubled}`);
-      continue;
-    }
-
-    const r = hepburn.fromKana(k).toLowerCase();
-    const phonetic = r
-      .replace(/n(?=[bmp])/g, "m")   // nasal assimilation
-      .replace(/ā/g, "aa")
-      .replace(/ī/g, "ee")
-      .replace(/ū/g, "oo")
-      .replace(/ē/g, "eh")
-      .replace(/ō/g, "ooh")
-      .replace(/n’/g, "n-");
-
-    phoneticMorae.push(phonetic);
-  }
-
-  const phonetic = phoneticMorae.join("-");
-
-  return {
-    kana,
-    hepburn: hepburnRomaji,
-    phonetic
-  };
-}
 
 // const postData = {
 //   title: 'This is the post title',

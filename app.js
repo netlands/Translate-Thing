@@ -790,14 +790,22 @@ app.post('/api/create-glossary-page', function (req, res) {
 		return res.status(500).json({ message: 'Error reading template file' });
 	}
 
+	const isValid = value => value != null && value.trim() !== '';
+
+	if (isValid(entry.ja2)) {
+				templateContent = templateContent.replace(/%ja%/g, '%ja% (%ja2%)' || '')
+	}
+
 	// Replace placeholders
 	let generatedHtml = templateContent
+		.replace(/%id%/g, entry.id || '0')
 		.replace(/%en%/g, '<span class="en">' + entry.en + '</span>' || '')
 		.replace(/%ja%/g, '<span class="ja">' + entry.ja + '</span>' || '')
 		.replace(/%romaji%/g, '<span class="romaji">' + entry.romaji + '</span>' || '')		
 		.replace(/%type%/g, (entry.type || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
 		.replace(/%group%/g, (entry.group || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
 		.replace(/%context%/g, (entry.context || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
+		.replace(/%ja2%/g, (entry.ja2 || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="ja-alternative-writing">${s}</span>`).join(' '))
 
 		if (entry.ja != entry.furigana) {
 			generatedHtml = generatedHtml.replace(/%furigana%/g, '<span class="furigana">' + entry.furigana + '</span>' || '')
@@ -814,9 +822,6 @@ app.post('/api/create-glossary-page', function (req, res) {
 		.replace(/・(?=<\/)/g, '');
 
 
-
-
-
 	const note = entry.note || '';
 	const paragraphs = (note || '').trim().split(/\r?\n+/).map(p => p.trim()).filter(Boolean);
 
@@ -824,10 +829,10 @@ app.post('/api/create-glossary-page', function (req, res) {
 	const content = paragraphs.length > 1
 	? paragraphs.slice(1).map(p => `<p>${p}</p>`).join('\n'): '';
 
-
 	generatedHtml = generatedHtml.replace(/%summary%/g, summary).replace(/%content%/g, content);
-	generatedHtml = generatedHtml.replace(/%en2%/g, '<span class="literal-meaning">' + entry.en2 + '</span>. ' || '')
-	
+	if (isValid(entry.en2)) {
+		generatedHtml = generatedHtml.replace(/%en2%/g, '<span class="literal-meaning">' + entry.en2 + '</span>. ' || '')
+	}
 	generatedHtml = generatedHtml.replace(/%[a-z0-9-]+%/g, '');
 	res.json({ html: generatedHtml });
 });
@@ -888,6 +893,7 @@ function kanaToModernHepburn(kana) {
 
   return romaji;
 }
+
 
 
 

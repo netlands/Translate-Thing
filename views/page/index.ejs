@@ -16,6 +16,14 @@
 	<link href="/css/bootstrap.min.css" rel="stylesheet" />
 	<link href="/css/mermaid.min.css" rel="stylesheet" />
 	<link href="/css/bootstrap-select.min.css" rel="stylesheet" />
+	<style>
+        :root {
+            --preferred-modal-width: 800px;
+        }
+        .modal-lg {
+            max-width: var(--preferred-modal-width) !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -164,7 +172,7 @@
 
 	<!-- Modal -->
 	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-		<div class="modal-dialog .modal-lg" role="document">
+		<div class="modal-dialog modal-lg" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h4 class="modal-title" id="myModalLabel">Add New Term</h4>
@@ -251,7 +259,7 @@
 
 	<!-- Modal -->
 	<div class="modal fade" id="myModalx" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-		<div class="modal-dialog .modal-lg" role="document">
+		<div class="modal-dialog modal-lg" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h4 class="modal-title" id="myModalLabel">Edit Term</h4>

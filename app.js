@@ -229,6 +229,29 @@ app.get('/api/deleteterm', function (req, res) {
 	}
 });
 
+// Check if an English term exists in the glossary
+app.get('/api/glossary/check', function (req, res) {
+    const englishTerm = req.query.en;
+    if (!englishTerm) {
+        return res.status(400).json({ error: 'English term is required.' });
+    }
+
+    try {
+        // Find one term matching the English value, case-insensitively
+        const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE');
+        const term = stmt.get(englishTerm);
+
+        if (term) {
+			console.log('Term exists:', term);
+            res.json({ exists: true, term: term });
+        } else {
+            res.json({ exists: false });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Server error while checking term.' });
+    }
+});
+
 app.get('/api/getterm', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
 	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority');

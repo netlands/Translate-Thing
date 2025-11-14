@@ -18,6 +18,9 @@ function ready(fn) {
 	document.addEventListener('DOMContentLoaded', fn);
  }
 
+ // This variable will hold the data of an existing term if found.
+ let existingTermData = null;
+
 ready(function(){ // $(document).ready(function () {
 	console.log("Page structure loaded!");
 	$('select').selectpicker();
@@ -209,7 +212,6 @@ ready(function(){ // $(document).ready(function () {
 			console.log('Unsupported Browser!');
 		} */
 
-		$('#myModal').show();
 	});
 
 	// Execute SQL (SELECT only)
@@ -272,7 +274,24 @@ ready(function(){ // $(document).ready(function () {
 	});
 
 	$('#myModal').on('hidden.bs.modal', function () {
-		$("#addTerm").trigger("reset"); // Reset form
+		// When the modal is closed, reset the form and hide the 'Display existing' button.
+		// We will no longer clear existingTermData here to prevent race conditions.
+		// It is cleared at the start of checkExistingTerm instead.
+		$('#editTerm')[0].reset();
+		$('#displayExistingBtn').hide();
+	});
+
+	// This function will run when the "Display existing entry" button is clicked.
+	$('#displayExistingBtn').on('click', function() {
+		console.log('"Display existing entry" button was clicked.');
+
+		if (existingTermData) {
+			console.log('Data is available:', existingTermData);
+			// Hide the "Add" modal. The data is now safe.
+			$('#myModal').modal('hide');
+		} else {
+			console.log('No existing term data found.');
+		}
 	});
 
 	fillTemplate();
@@ -378,6 +397,40 @@ function updateTable(term) {
 		document.getElementById("titleTranslated").value = titleTranslated;
 	});
 
+}
+
+/**
+ * Checks if an English term already exists in the glossary.
+ * This function is called by the onblur event of the English input field.
+ * @param {string} term - The English term to check.
+ */
+function checkExistingTerm(term) {
+    const displayBtn = $('#displayExistingBtn');
+    const trimmedTerm = term ? term.trim() : '';
+
+    // If the term being checked is the same one we already have data for, do nothing.
+    if (existingTermData && existingTermData.en.toLowerCase() === trimmedTerm.toLowerCase()) {
+        return;
+    }
+    
+    // Always reset on a new check
+    displayBtn.hide();
+    existingTermData = null;
+
+    if (trimmedTerm === '') {
+        return; // Do nothing if the input is empty
+    }
+
+    $.ajax({
+        url: `/api/glossary/check?en=${encodeURIComponent(trimmedTerm)}`,
+        type: 'GET',
+    }).done(function(data) {
+        if (data.exists) {
+            existingTermData = data.term; // Store the full term object for later use
+            console.log(existingTermData)
+			displayBtn.show(); // Show the button if the term exists
+        }
+    });
 }
 
 // duplicates toggle: when enabled, updateTable shows only duplicates

@@ -345,6 +345,20 @@
 	<script src="/js/wanakana.min.js"></script>
 
 	<script src="/js/jquery.autoKana.js"></script>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const contextMenu = document.getElementById('glossary-context-menu');
+
+			// Hide the context menu when clicking anywhere on the document
+			document.addEventListener('click', function (e) {
+				// Check if the click was outside the context menu
+				if (!contextMenu.contains(e.target)) {
+					contextMenu.style.display = 'none';
+				}
+			});
+		});
+	</script>
 </body>
 
 </html>

@@ -286,8 +286,28 @@ ready(function(){ // $(document).ready(function () {
 		console.log('"Display existing entry" button was clicked.');
 
 		if (existingTermData) {
-			console.log('Data is available:', existingTermData);
-			// Hide the "Add" modal. The data is now safe.
+			// Use a one-time event listener to open the edit modal AFTER the add modal is fully closed.
+			// This prevents modal conflicts.
+			$('#myModal').one('hidden.bs.modal', function() {
+				// Populate the "Edit" modal (#myModalx) with the existing data
+				$("#enx").val(existingTermData.en);
+				$("#jax").val(existingTermData.ja);
+				$("#furiganax").val(existingTermData.furigana);
+				$("#romajix").val(existingTermData.romaji);
+				$("#ja2x").val(existingTermData.ja2);
+				$("#en2x").val(existingTermData.en2);
+				$("#contextx").val(existingTermData.context);
+				$("#typex").val(existingTermData.type);
+				$("#priorityx").val(existingTermData.priority);
+				$("#groupx").val(existingTermData.group);
+				$("#notex").val(existingTermData.note);
+				$("#idx").val(existingTermData.id);
+
+				// Now, safely show the "Edit" modal.
+				$('#myModalx').modal('show');
+			});
+
+			// After setting up the listener, trigger the 'Add' modal to close.
 			$('#myModal').modal('hide');
 		} else {
 			console.log('No existing term data found.');

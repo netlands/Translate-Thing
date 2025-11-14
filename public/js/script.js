@@ -537,55 +537,10 @@ $(document).on('click', '#ShowDuplicates', function () {
 document.addEventListener('DOMContentLoaded', function () {
 	const tableContainer = document.getElementById('table');
 	const menu = document.getElementById('glossary-context-menu');
+	const copySelectionItem = document.getElementById('context-copy-selection');
 	let currentRowData = { en: '', ja: '', id: '' };
-
-	// Helper to hide menu
-	function hideMenu() {
-		if (menu) menu.style.display = 'none';
-	}
-
-	// Click anywhere hides the menu
-	document.addEventListener('click', function (e) {
-		hideMenu();
-	});
-
-
-	// Show duplicates button handler
-	$(document).on('click', '#ShowDuplicates', function () {
-		$.ajax({ url: '/api/getduplicates' }).done(function (data) {
-			const rows = data.rows || [];
-			// sort rows by normalized en so duplicates are adjacent
-			rows.sort(function(a,b){
-				const an = (a.en||'').toString().trim().toLowerCase();
-				const bn = (b.en||'').toString().trim().toLowerCase();
-				if (an < bn) return -1; if (an > bn) return 1; return 0;
-			});
-			// render using same grid pattern
-			document.getElementById('table').innerHTML = '';
-			const grid = new gridjs.Grid({
-				sort: true,
-				search: { enabled: true },
-				pagination: { limit: 50 },
-				fixedHeader: true,
-				height: '400px',
-				data: rows
-			}).render(document.getElementById('table'));
-
-			grid.updateConfig({
-				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
-					{ name: 'postId', hidden: true },
-					{ name: 'id', hidden: true },
-				],
-				height: '500px'
-			}).forceRender();
-
-			try { grid.on('rowClick', (...args) => {
-				if (window.getSelection().toString().trim() === '') {
-					getFields(JSON.stringify(args));
-				}
-			}); } catch (e) {}
-		});
-	});
+	let currentSelectionText = ''; // Variable to hold the selected text
+	let contextMenuVisible = false;
 
 	// Context menu on table
 	tableContainer.addEventListener('contextmenu', function (e) {
@@ -615,10 +570,29 @@ document.addEventListener('DOMContentLoaded', function () {
 		menu.style.left = e.pageX + 'px';
 		menu.style.top = e.pageY + 'px';
 		menu.style.display = 'block';
+		contextMenuVisible = true;
+
+		// Show/hide the "Copy selection" item
+		currentSelectionText = window.getSelection().toString().trim();
+		if (copySelectionItem) {
+			if (currentSelectionText) {
+				copySelectionItem.style.display = 'block';
+			} else {
+				copySelectionItem.style.display = 'none';
+			}
+		}
 	});
 
 	// Menu item clicks
 	menu.addEventListener('click', function (e) {
+		// Stop the click from bubbling up to the document and closing the menu prematurely
+		e.stopPropagation();
+
+		// Hide the menu after an action is performed
+		menu.style.display = 'none';
+		contextMenuVisible = false;
+
+		// Perform the action
 		const action = e.target.getAttribute('data-action');
 		const isCtrlClick = e.ctrlKey || e.metaKey; // metaKey for macOS
 
@@ -649,6 +623,12 @@ document.addEventListener('DOMContentLoaded', function () {
 				// On normal click, copy to clipboard
 				navigator.clipboard.writeText(currentRowData.ja).then(function () {
 					console.log('Copied JA:', currentRowData.ja);
+				});
+			}
+		} else if (action === 'copy-selection') {
+			if (currentSelectionText) {
+				navigator.clipboard.writeText(currentSelectionText).then(function () {
+					console.log('Copied selection:', currentSelectionText);
 				});
 			}
 		} else if (action === 'create-page') {

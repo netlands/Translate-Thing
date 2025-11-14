@@ -153,6 +153,7 @@ app.get('/api/translate', function (req, res) {
 });
 
 const fs = require('fs');
+const { title } = require('process');
 
 app.get('/api/template', function (req, res) {
 	//console.log(req.query);
@@ -827,12 +828,7 @@ function getLocalIp() {
 	}
 }
 
-app.post('/api/create-glossary-page', async function (req, res) {
-	const entry = req.body;
-	if (!entry) {
-		return res.status(400).json({ message: 'Glossary entry data is missing.' });
-	}
-
+async function createPostPage(entry) {
 	const templatePath = 'glossary-template.html';
 	let templateContent = "";
 	try {
@@ -854,8 +850,7 @@ app.post('/api/create-glossary-page', async function (req, res) {
 		.replace(/%en%/g, '<span class="en">' + entry.en + '</span>' || '')
 		.replace(/%ja%/g, '<span class="ja">' + entry.ja + '</span>' || '')
 		.replace(/%romaji%/g, '<span class="romaji">' + entry.romaji + '</span>' || '')		
-		.replace(/%type%/g, (entry.type || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
-		.replace(/%group%/g, (entry.group || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
+		.replace(/%group%/g, (entry.group || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="label">${s}</span>`).join(' '))
 		.replace(/%context%/g, (entry.context || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
 		.replace(/%ja2%/g, (entry.ja2 || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="ja-alternative-writing">${s}</span>`).join(' '))
 
@@ -871,6 +866,7 @@ app.post('/api/create-glossary-page', async function (req, res) {
 
 	// clean up multiple dots
 	generatedHtml = generatedHtml
+		.replace(/・<(?!\/)[^>\s]+(?:\s[^>]*)?><\/\1>・|・<[^>]+\/>・/g, '・') // Change "・" with an empty element between
 		.replace(/・{2,}/g, "・")      // Change 2 or more consecutive "・"
 		.replace(/・(?=<\/)/g, '');	   // Remove "・" before a closing tag
 
@@ -886,7 +882,20 @@ app.post('/api/create-glossary-page', async function (req, res) {
 	if (isValid(entry.en2)) {
 		generatedHtml = generatedHtml.replace(/%en2%/g, '<span class="literal-meaning">' + entry.en2 + '</span>. ' || '')
 	}
+	// clean up any unreplaced placeholders
 	generatedHtml = generatedHtml.replace(/%[a-z0-9-]+%/g, '');
+
+	return generatedHtml;
+}
+
+app.post('/api/create-glossary-page', async function (req, res) {
+	const entry = req.body;
+	if (!entry) {
+		return res.status(400).json({ message: 'Glossary entry data is missing.' });
+	}
+
+	generatedHtml = await createPostPage(entry);
+
 	res.json({ html: generatedHtml });
 });
 
@@ -903,11 +912,23 @@ app.get('/api/glossary-css', function (req, res) {
 });
 
 app.post('/api/post-to-blogger', async function (req, res) {
+	const entry = req.body;
+	console.log('Received request to post to Blogger:', entry);
+	if (!entry) {
+		return res.status(400).json({ message: 'Glossary entry data is missing.' });
+	}
+
+	postTitle = entry.en;
+	postTitle = postTitle.replace(/\b\w+\b/g, w => /^[A-Z]/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
+	generatedHtml = await createPostPage(entry);
+	labels = entry.group.split(',').map(s => s.trim());
+
 	// Use the hardcoded sample postData as requested for now.
 	const postData = {
-		title: 'This is the test post title',
-		content: '<p>This is the test post content</p>',
-		labels: ['label1', 'label2', 'test'],
+		title: postTitle,
+		content: generatedHtml,
+		labels: labels
 	};
 
 	try {

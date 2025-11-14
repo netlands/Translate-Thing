@@ -7,7 +7,7 @@
     color: gray;
 }
 
-.tag {
+.tag, .label {
   display: inline-block;
   padding: 0.2em 0.6em;
   margin: 0.1em;
@@ -17,6 +17,10 @@
   font-weight: 500;
   border-radius: 0.4em;
   white-space: nowrap;
+}
+
+.label {
+  background-color: orange;
 }
 
 .literal-meaning {

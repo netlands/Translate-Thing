@@ -603,39 +603,76 @@ document.addEventListener('DOMContentLoaded', function () {
 				});
 			}
 		} else if (action === 'post-to-glossary') {
-			// 1. Add a confirmation before posting
+			function doPostToGlossary(entryData) {
+				if (!entryData) {
+					alert('Could not fetch entry data to post.');
+					return;
+				}
+
+				// Show a temporary "posting..." message in the modal
+				$('#confirmationModalBody').text('Posting to glossary...');
+				$('#confirmationModal').modal('show');
+
+				// Call the new backend endpoint with the entry data
+				$.ajax({
+					url: '/api/post-to-blogger',
+					type: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify(entryData)
+				}).done(function(response) {
+					// Show a confirmation dialog with the post ID
+					let successMsg = 'Successfully posted to glossary!';
+					if (response && response.result && response.result.id) {
+						const postId = response.result.id;
+						successMsg += ` (${postId})`;
+					}
+					$('#confirmationModalBody').text(successMsg);
+				}).fail(function(xhr) {
+					// Check if this is an authentication error
+					if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.authUrl) {
+						// Redirect the user to the authentication URL
+						$('#confirmationModal').modal('hide');
+						window.open(xhr.responseJSON.authUrl, '_blank');
+					} else {
+						let msg = 'Failed to post to glossary.';
+						try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
+						$('#confirmationModalBody').text(msg);
+					}
+				});
+			}
+
 			if (!confirm('Are you sure you want to post this to the glossary blog?')) {
 				return;
 			}
 
-			// Show a temporary "posting..." message in the modal
-			$('#confirmationModalBody').text('Posting to glossary...');
-			$('#confirmationModal').modal('show');
-
-			// 2. Call the new backend endpoint
-			$.ajax({
-				url: '/api/post-to-blogger',
-				type: 'POST',
-			}).done(function(response) {
-				// 3. Show a confirmation dialog with the post ID
-				let successMsg = 'Successfully posted to glossary!';
-				if (response && response.result && response.result.id) {
-					const postId = response.result.id;
-					successMsg += ` (${postId})`;
-				}
-				$('#confirmationModalBody').text(successMsg);
-			}).fail(function(xhr) {
-				// Check if this is an authentication error
-				if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.authUrl) {
-					// Redirect the user to the authentication URL
-					$('#confirmationModal').modal('hide');
-					window.open(xhr.responseJSON.authUrl, '_blank');
-				} else {
-					let msg = 'Failed to post to glossary.';
-					try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
-					$('#confirmationModalBody').text(msg);
-				}
-			});
+			// Fetch the full entry data before posting
+			if (currentRowData.id && /^\d+$/.test(currentRowData.id)) {
+				$.ajax({
+					url: '/api/execsql',
+					type: 'POST',
+					data: { sql: `SELECT * FROM glossary WHERE id = ?`, params: [currentRowData.id] },
+				}).done(function (data) {
+					if (data && data.rows && data.rows.length > 0) {
+						doPostToGlossary(data.rows[0]);
+					} else {
+						alert('Could not fetch entry data with the provided ID.');
+					}
+				});
+			} else {
+				// Fallback: Find the ID by matching 'en' and 'ja' terms.
+				$.ajax({
+					url: '/api/getrows',
+					data: { term: currentRowData.en },
+				}).done(function (data) {
+					const rows = data.rows || [];
+					let foundEntry = rows.find(row => row.en === currentRowData.en && row.ja === currentRowData.ja);
+					if (foundEntry) {
+						doPostToGlossary(foundEntry);
+					} else {
+						alert('Could not find a matching entry in the database.');
+					}
+				});
+			}
 		} else if (action === 'delete-entry') {
 			// confirm and call delete API. If id is missing in the DOM, try to find it via /api/gettable
 			function doDelete(idToDelete) {

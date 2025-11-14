@@ -604,15 +604,37 @@ document.addEventListener('DOMContentLoaded', function () {
 	// Menu item clicks
 	menu.addEventListener('click', function (e) {
 		const action = e.target.getAttribute('data-action');
+		const isCtrlClick = e.ctrlKey || e.metaKey; // metaKey for macOS
+
 		if (!action) return;
 		if (action === 'copy-en') {
-			navigator.clipboard.writeText(currentRowData.en).then(function () {
-				console.log('Copied EN:', currentRowData.en);
-			});
+			if (isCtrlClick) {
+				// On Ctrl+Click, filter the table by the English term
+				const searchInput = document.querySelector('.gridjs-search-input');
+				if (searchInput) {
+					searchInput.value = currentRowData.en;
+					searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			} else {
+				// On normal click, copy to clipboard
+				navigator.clipboard.writeText(currentRowData.en).then(function () {
+					console.log('Copied EN:', currentRowData.en);
+				});
+			}
 		} else if (action === 'copy-ja') {
-			navigator.clipboard.writeText(currentRowData.ja).then(function () {
-				console.log('Copied JA:', currentRowData.ja);
-			});
+			if (isCtrlClick) {
+				// On Ctrl+Click, filter the table by the Japanese term
+				const searchInput = document.querySelector('.gridjs-search-input');
+				if (searchInput) {
+					searchInput.value = currentRowData.ja;
+					searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			} else {
+				// On normal click, copy to clipboard
+				navigator.clipboard.writeText(currentRowData.ja).then(function () {
+					console.log('Copied JA:', currentRowData.ja);
+				});
+			}
 		} else if (action === 'create-page') {
 			// Use the same robust ID-finding logic as the delete function.
 			function doCreatePage(entryData) {

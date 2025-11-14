@@ -318,9 +318,78 @@ ready(function(){ // $(document).ready(function () {
 		}
 	});
 
+	$('#myModalx').on('hidden.bs.modal', function () {
+        // Reset the view to edit mode when the modal is closed
+        $('#updateTerm').show();
+        $('#termPreview').hide();
+        $('#viewTermButton').show();
+        $('#backToEditButton').hide();
+        $('#UButton').show();
+        $('#DButton').show();
+    });
+
+    $('#viewTermButton').on('click', function() {
+        const entryData = {
+            en: $("#enx").val(),
+            ja: $("#jax").val(),
+            furigana: $("#furiganax").val(),
+            romaji: $("#romajix").val(),
+            ja2: $("#ja2x").val(),
+            en2: $("#en2x").val(),
+            context: $("#contextx").val(),
+            type: $("#typex").val(),
+            priority: $("#priorityx").val(),
+            group: $("#groupx").val(),
+            note: $("#notex").val(),
+            id: $("#idx").val()
+        };
+        
+        displayTermPreview(entryData, '#termPreview');
+
+        $('#updateTerm').hide();
+        $('#termPreview').show();
+        $('#viewTermButton').hide();
+        $('#backToEditButton').show();
+        $('#UButton').hide();
+        $('#DButton').hide();
+    });
+
+    $('#backToEditButton').on('click', function() {
+        $('#updateTerm').show();
+        $('#termPreview').hide();
+        $('#viewTermButton').show();
+        $('#backToEditButton').hide();
+        $('#UButton').show();
+        $('#DButton').show();
+    });
+
 	fillTemplate();
 
 });
+
+function displayTermPreview(entryData, targetElement) {
+    if (!entryData) {
+        alert('Could not fetch entry data.');
+        return;
+    }
+
+    // Fetch both the HTML for the page and the CSS to style it
+    const getHtml = $.ajax({ url: '/api/create-glossary-page', type: 'POST', contentType: 'application/json', data: JSON.stringify(entryData) });
+    const getCss = $.get('/api/glossary-css');
+
+    $.when(getHtml, getCss).done(function(htmlResponse, cssResponse) {
+        const pageHtml = htmlResponse[0].html;
+        const glossaryCss = cssResponse[0];
+
+        const styleBlock = `<style>${glossaryCss}</style>`;
+
+        // Show the rendered HTML in the target element
+        $(targetElement).html(styleBlock + pageHtml);
+    }).fail(function() {
+        let msg = 'Error creating glossary page.';
+        alert(msg);
+    });
+}
 
 // [{"en":"silk","ja":"正絹","furigana":"","romaji":"shouken","ja2":"","en2":"","context":"","type":"material","note":""},{"en":"silk","ja":"絹","furigana":"きぬ","romaji":"kinu","ja2":"","en2":"","context":"","type":"material","note":""}]
 

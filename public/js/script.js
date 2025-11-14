@@ -261,7 +261,11 @@ ready(function(){ // $(document).ready(function () {
 				height: '500px'
 			}).forceRender();
 
-			try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+			try { grid.on('rowClick', (...args) => {
+				if (window.getSelection().toString().trim() === '') {
+					getFields(JSON.stringify(args));
+				}
+			}); } catch (e) {}
 				// show transformed SQL if provided by server, otherwise hide the element
 				try {
 					if (data && data.transformedSql) {
@@ -387,7 +391,11 @@ function updateTable(term) {
 
 			//grid.on('rowClick', (...args) => console.log('row: ' + JSON.stringify(args), args));
 			//grid.on('cellClick', (...args) => console.log('cell: ' + JSON.stringify(args), args));
-			grid.on('rowClick', (...args) =>  getFields(JSON.stringify(args)));
+			grid.on('rowClick', (...args) => {
+				if (window.getSelection().toString().trim() === '') {
+					getFields(JSON.stringify(args));
+				}
+			});
 
 
 			// hide id field
@@ -475,7 +483,11 @@ function renderGridFromRows(rows, term) {
 		],
 		height: '500px'
 	}).forceRender();
-	try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+	try { grid.on('rowClick', (...args) => {
+		if (window.getSelection().toString().trim() === '') {
+			getFields(JSON.stringify(args));
+		}
+	}); } catch (e) {}
 	// force a repaint and reset scroll to ensure the new grid is visible
 	try {
 		grid.forceRender();
@@ -567,7 +579,11 @@ document.addEventListener('DOMContentLoaded', function () {
 				height: '500px'
 			}).forceRender();
 
-			try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+			try { grid.on('rowClick', (...args) => {
+				if (window.getSelection().toString().trim() === '') {
+					getFields(JSON.stringify(args));
+				}
+			}); } catch (e) {}
 		});
 	});
 

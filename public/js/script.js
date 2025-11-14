@@ -538,6 +538,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	const tableContainer = document.getElementById('table');
 	const menu = document.getElementById('glossary-context-menu');
 	const copySelectionItem = document.getElementById('context-copy-selection');
+	const filterSelectionItem = document.getElementById('context-filter-selection');
 	let currentRowData = { en: '', ja: '', id: '' };
 	let currentSelectionText = ''; // Variable to hold the selected text
 	let contextMenuVisible = false;
@@ -575,11 +576,11 @@ document.addEventListener('DOMContentLoaded', function () {
 		// Show/hide the "Copy selection" item
 		currentSelectionText = window.getSelection().toString().trim();
 		if (copySelectionItem) {
-			if (currentSelectionText) {
-				copySelectionItem.style.display = 'block';
-			} else {
-				copySelectionItem.style.display = 'none';
-			}
+			copySelectionItem.style.display = currentSelectionText ? 'block' : 'none';
+		}
+		// Also show/hide the "Filter on selection" item
+		if (filterSelectionItem) {
+			filterSelectionItem.style.display = currentSelectionText ? 'block' : 'none';
 		}
 	});
 
@@ -630,6 +631,15 @@ document.addEventListener('DOMContentLoaded', function () {
 				navigator.clipboard.writeText(currentSelectionText).then(function () {
 					console.log('Copied selection:', currentSelectionText);
 				});
+			}
+		} else if (action === 'filter-selection') {
+			if (currentSelectionText) {
+				const searchInput = document.querySelector('.gridjs-search-input');
+				if (searchInput) {
+					searchInput.value = currentSelectionText;
+					// Dispatch an 'input' event to trigger Grid.js's search functionality
+					searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+				}
 			}
 		} else if (action === 'create-page') {
 			// Use the same robust ID-finding logic as the delete function.

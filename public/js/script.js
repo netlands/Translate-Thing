@@ -1076,8 +1076,6 @@ function getFields(data) {
 	priority = cells[8]["data"]; 
 	group = cells[9]["data"]; 
 	note = cells[10]["data"]; 
-	id = cells[11]["data"];
-	console.log(id);
 	postId = cells[11]["data"];
 	id = cells[12]["data"];
 	console.log("id:", id, "postId:", postId);

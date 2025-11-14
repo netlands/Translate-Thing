@@ -20,6 +20,7 @@ function ready(fn) {
 
  // This variable will hold the data of an existing term if found.
  let existingTermData = null;
+ let previewedTermData = null;
 
 ready(function(){ // $(document).ready(function () {
 	console.log("Page structure loaded!");
@@ -315,6 +316,34 @@ ready(function(){ // $(document).ready(function () {
 			$('#myModal').modal('hide');
 		} else {
 			console.log('No existing term data found.');
+		}
+	});
+
+	$('#editFromPreviewButton').on('click', function() {
+		if (previewedTermData) {
+			$('#confirmationModal').one('hidden.bs.modal', function() {
+				// Populate the "Edit" modal (#myModalx) with the previewed data
+				$("#enx").val(previewedTermData.en);
+				$("#jax").val(previewedTermData.ja);
+				$("#furiganax").val(previewedTermData.furigana);
+				$("#romajix").val(previewedTermData.romaji);
+				$("#ja2x").val(previewedTermData.ja2);
+				$("#en2x").val(previewedTermData.en2);
+				$("#contextx").val(previewedTermData.context);
+				$("#typex").val(previewedTermData.type);
+				$("#priorityx").val(previewedTermData.priority);
+				$("#groupx").val(previewedTermData.group);
+				$("#notex").val(previewedTermData.note);
+				$("#idx").val(previewedTermData.id);
+
+				// Now, safely show the "Edit" modal.
+				$('#myModalx').modal('show');
+			});
+
+			// After setting up the listener, trigger the 'confirmation' modal to close.
+			$('#confirmationModal').modal('hide');
+		} else {
+			console.log('No previewed term data found.');
 		}
 	});
 
@@ -730,6 +759,7 @@ document.addEventListener('DOMContentLoaded', function () {
 					const styleBlock = `<style>${glossaryCss}</style>`;
 
 					// Show the rendered HTML in a modal dialog with inline styles
+					previewedTermData = entryData;
 					$('#confirmationModalBody').html(styleBlock + pageHtml);
 					$('#confirmationModal').modal('show');
 				}).fail(function() {

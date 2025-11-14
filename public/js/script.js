@@ -901,7 +901,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 
 			if (!confirm('Delete this entry? This cannot be undone.')) {
-				hideMenu();
+				menu.style.display = 'none';
 				return;
 			}
 
@@ -939,7 +939,6 @@ document.addEventListener('DOMContentLoaded', function () {
 				});
 			}
 		}
-		hideMenu();
 	});
 
 	// Hide builtin context menu when clicking outside

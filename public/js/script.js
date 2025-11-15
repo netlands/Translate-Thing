@@ -637,17 +637,30 @@ document.addEventListener('DOMContentLoaded', function () {
 	const filterSelectionItem = document.getElementById('context-filter-selection');
 	let currentRowData = { en: '', ja: '', id: '' };
 	let currentSelectionText = ''; // Variable to hold the selected text
+	let currentCellContent = ''; // Variable to hold the content of the right-clicked cell
 	let contextMenuVisible = false;
 
 	// Context menu on table
 	tableContainer.addEventListener('contextmenu', function (e) {
-		// find the clicked row element
+		// find the clicked cell element
 		let el = e.target;
-		// gridjs uses td inside tr, try to find ancestor tr
-		while (el && el !== tableContainer && el.tagName !== 'TR') {
+		// gridjs uses td inside tr, try to find ancestor td
+		while (el && el !== tableContainer && el.tagName !== 'TD') {
 			el = el.parentElement;
 		}
 		if (!el || el === tableContainer) {
+			return; // not on a cell
+		}
+
+		// Store the content of the right-clicked cell
+		currentCellContent = el.innerText.trim();
+
+		// find the clicked row element
+		let rowEl = el;
+		while (rowEl && rowEl !== tableContainer && rowEl.tagName !== 'TR') {
+			rowEl = rowEl.parentElement;
+		}
+		if (!rowEl || rowEl === tableContainer) {
 			return; // not on a row
 		}
 
@@ -657,7 +670,7 @@ document.addEventListener('DOMContentLoaded', function () {
 		// The data is now set by the getFields (left-click) function.
 		// We just need to read it here.
 		// We also need to get the en/ja terms for the fallback logic.
-		const tds = el.querySelectorAll('td');
+		const tds = rowEl.querySelectorAll('td');
 		if (tds && tds.length > 1) {
 			currentRowData.en = tds[0].innerText.trim();
 			currentRowData.ja = tds[1].innerText.trim();
@@ -694,7 +707,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		const isCtrlClick = e.ctrlKey || e.metaKey; // metaKey for macOS
 
 		if (!action) return;
-		if (action === 'copy-en') {
+		if (action === 'copy-cell') {
+			if (currentCellContent) {
+				navigator.clipboard.writeText(currentCellContent).then(function () {
+					console.log('Copied cell content:', currentCellContent);
+				});
+			}
+		} else if (action === 'copy-en') {
 			// On normal click, copy to clipboard
 			navigator.clipboard.writeText(currentRowData.en).then(function () {
 				console.log('Copied EN:', currentRowData.en);

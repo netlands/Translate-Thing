@@ -262,11 +262,7 @@ ready(function(){ // $(document).ready(function () {
 				height: '500px'
 			}).forceRender();
 
-			try { grid.on('rowClick', (...args) => {
-				if (window.getSelection().toString().trim() === '') {
-					getFields(JSON.stringify(args));
-				}
-			}); } catch (e) {}
+			addGridEventHandlers(grid);
 				// show transformed SQL if provided by server, otherwise hide the element
 				try {
 					if (data && data.transformedSql) {
@@ -492,13 +488,7 @@ function updateTable(term) {
 				data: rows
 			}).render(document.getElementById("table"));
 
-			//grid.on('rowClick', (...args) => console.log('row: ' + JSON.stringify(args), args));
-			//grid.on('cellClick', (...args) => console.log('cell: ' + JSON.stringify(args), args));
-			grid.on('rowClick', (...args) => {
-				if (window.getSelection().toString().trim() === '') {
-					getFields(JSON.stringify(args));
-				}
-			});
+			addGridEventHandlers(grid);
 
 
 			// hide id field
@@ -586,11 +576,7 @@ function renderGridFromRows(rows, term) {
 		],
 		height: '500px'
 	}).forceRender();
-	try { grid.on('rowClick', (...args) => {
-		if (window.getSelection().toString().trim() === '') {
-			getFields(JSON.stringify(args));
-		}
-	}); } catch (e) {}
+	addGridEventHandlers(grid);
 	// force a repaint and reset scroll to ensure the new grid is visible
 	try {
 		grid.forceRender();
@@ -1096,6 +1082,32 @@ function getFields(data) {
 	// This is now the single source of truth for the context menu.
 	currentRowData = { en, ja, id };
 	$('#myModalx').modal('show'); 
+}
+
+function addGridEventHandlers(grid) {
+    try {
+		grid.on('rowClick', (...args) => {
+			if (window.getSelection().toString().trim() === '') {
+				getFields(JSON.stringify(args));
+			}
+		});
+
+		grid.on('cellClick', (e, cell) => {
+			if (e.ctrlKey) {
+				e.stopPropagation();
+				const cellValue = cell.data;
+				if (cellValue) {
+					const searchInput = document.querySelector('.gridjs-search-input');
+					if (searchInput) {
+						searchInput.value = cellValue;
+						searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+					}
+				}
+			}
+		});
+	} catch (e) {
+		console.error("Error adding grid event handlers", e);
+	}
 }
 
 

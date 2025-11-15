@@ -975,6 +975,25 @@ function doPostToGlossary(entryData) {
 		if (response && response.result && response.result.id) {
 			const postId = response.result.id;
 			successMsg += ` (${postId})`;
+
+			// Now, update the glossary entry with the new postId
+			$.ajax({
+				url: '/api/update-post-id',
+				type: 'POST',
+				data: {
+					id: entryData.id,
+					postId: postId
+				}
+			}).done(function(updateResponse) {
+				if (updateResponse.success) {
+					console.log('Successfully updated postId for entry ' + entryData.id);
+					updateTable(''); // Refresh the table
+				} else {
+					alert('Failed to update postId in the database.');
+				}
+			}).fail(function() {
+				alert('Error calling update-post-id API.');
+			});
 		}
 		$('#confirmationModalBody').text(successMsg);
 	}).fail(function(xhr) {

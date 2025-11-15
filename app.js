@@ -229,6 +229,28 @@ app.get('/api/deleteterm', function (req, res) {
 	}
 });
 
+app.post('/api/update-post-id', function (req, res) {
+	const { id, postId } = req.body;
+
+	if (!id || !postId) {
+		return res.status(400).json({ success: false, message: 'Missing id or postId' });
+	}
+
+	try {
+		const stmt = db.prepare('UPDATE glossary SET postId = ? WHERE id = ?');
+		const info = stmt.run(postId, id);
+
+		if (info.changes > 0) {
+			res.json({ success: true, message: 'postId updated successfully.' });
+		} else {
+			res.status(404).json({ success: false, message: 'Entry not found.' });
+		}
+	} catch (error) {
+		console.error('Error updating postId:', error);
+		res.status(500).json({ success: false, message: 'Server error while updating postId.' });
+	}
+});
+
 // Check if an English term exists in the glossary
 app.get('/api/glossary/check', function (req, res) {
     const englishTerm = req.query.en;

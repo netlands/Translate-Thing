@@ -98,7 +98,7 @@
 			<li hidden class="context-item" data-action="copy-en">Copy English</li>
 			<li hidden class="context-item" data-action="copy-ja">Copy Japanese</li>
 			<li class="context-item" data-action="create-page">Preview glossary entry</li>
-			<li class="context-item" data-action="post-to-glossary">Post to Glossary</li>
+			<li class="context-item" data-action="post-to-glossary" style="color:#2db44a;">Post to Glossary</li>
 			<li class="context-item context-delete" data-action="delete-entry" style="color:#a94442;">Delete Entry</li>
 		</ul>
 	</div>
@@ -119,6 +119,7 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-success" id="PostFromPreviewButton">Post</button>
 					<button type="button" class="btn btn-primary" id="editFromPreviewButton">Edit</button>
 				</div>
 			</div>
@@ -340,6 +341,7 @@
 					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					<button type="button" class="btn btn-info" id="viewTermButton">View</button>
 					<button type="button" class="btn btn-info" id="backToEditButton" style="display: none;">Back to Edit</button>
+					<button type="button" class="btn btn-success" id="PostFromEditButton">Post</button>
 					<button type="button" class="btn btn-danger" id="DButton">Delete Term</button>
 					<button type="button" class="btn btn-primary" id="UButton">Update Term</button>
 				</div>

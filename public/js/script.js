@@ -274,6 +274,13 @@ ready(function(){ // $(document).ready(function () {
 		});
 	});
 
+	$(document).on('click', '#ClearSQL', function() {
+        $('#sqlQuery').val('');
+        $('#transformedSql').hide().text('');
+        $('#sqlResult').hide().text('');
+        updateTable('');
+    });
+
 	$('#myModal').on('hidden.bs.modal', function () {
 		// When the modal is closed, reset the form and hide the 'Display existing' button.
 		// We will no longer clear existingTermData here to prevent race conditions.
@@ -688,33 +695,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		if (!action) return;
 		if (action === 'copy-en') {
-			if (isCtrlClick) {
-				// On Ctrl+Click, filter the table by the English term
-				const searchInput = document.querySelector('.gridjs-search-input');
-				if (searchInput) {
-					searchInput.value = currentRowData.en;
-					searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-				}
-			} else {
-				// On normal click, copy to clipboard
-				navigator.clipboard.writeText(currentRowData.en).then(function () {
-					console.log('Copied EN:', currentRowData.en);
-				});
-			}
+			// On normal click, copy to clipboard
+			navigator.clipboard.writeText(currentRowData.en).then(function () {
+				console.log('Copied EN:', currentRowData.en);
+			});
 		} else if (action === 'copy-ja') {
-			if (isCtrlClick) {
-				// On Ctrl+Click, filter the table by the Japanese term
-				const searchInput = document.querySelector('.gridjs-search-input');
-				if (searchInput) {
-					searchInput.value = currentRowData.ja;
-					searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-				}
-			} else {
-				// On normal click, copy to clipboard
-				navigator.clipboard.writeText(currentRowData.ja).then(function () {
-					console.log('Copied JA:', currentRowData.ja);
-				});
-			}
+			// On normal click, copy to clipboard
+			navigator.clipboard.writeText(currentRowData.ja).then(function () {
+				console.log('Copied JA:', currentRowData.ja);
+			});
 		} else if (action === 'copy-selection') {
 			if (currentSelectionText) {
 				navigator.clipboard.writeText(currentSelectionText).then(function () {

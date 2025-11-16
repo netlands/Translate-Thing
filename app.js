@@ -3,6 +3,8 @@ var app = express();
 var cors = require('cors')
 var path = require('path');
 
+BigInt.prototype.toJSON = function() { return this.toString(); };
+
 const { default: Kuroshiro } = require("kuroshiro");
 const KuromojiAnalyzer = require("kuroshiro-analyzer-kuromoji");
 
@@ -36,12 +38,12 @@ async function kanaToModernHepburn(kana) {
 
 
 
-const { postToBlogger, oauth2Client } = require('./bloggerPoster');
+const { postToBlogger, updatePostOnBlogger, oauth2Client } = require('./bloggerPoster');
 
 // body parser for POST
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const db = require('better-sqlite3')('tm.db');
+const db = require('better-sqlite3')('tm.db', { safeIntegers: true });
 // helper: provide a regexp function to SQLite so we can use whole-word regex matching for quoted terms
 function escapeRegExp(s) {
 	return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -991,6 +993,40 @@ app.post('/api/post-to-blogger', async function (req, res) {
 		res.status(500).json({ message: 'Failed to post to glossary.', error: error.message });
 	}
 });
+
+app.post('/api/update-post-on-blogger', async function (req, res) {
+	const entry = req.body;
+	console.log('Received request to update post on Blogger:', entry);
+	if (!entry || !entry.postId) {
+		return res.status(400).json({ message: 'Glossary entry data with postId is missing.' });
+	}
+
+	postTitle = entry.en;
+	postTitle = postTitle.replace(/\b\w+\b/g, w => /^[A-Z]/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
+	generatedHtml = await createPostPage(entry);
+	labels = entry.group.split(',').map(s => s.trim());
+
+	const postData = {
+        postId: entry.postId,
+		title: postTitle,
+		content: generatedHtml,
+		labels: labels
+	};
+
+	try {
+		const result = await updatePostOnBlogger(postData);
+		res.json({ message: 'Successfully updated post on glossary!', result: result });
+	} catch (error) {
+		if (error.authUrl) {
+			console.log('Authentication required. Sending auth URL to client.');
+			return res.status(401).json({ message: 'Authentication required.', authUrl: error.authUrl });
+		}
+		console.error('Error updating post on Blogger:', error.message);
+		res.status(500).json({ message: 'Failed to update post on glossary.', error: error.message });
+	}
+});
+
 
 
 // const postData = {

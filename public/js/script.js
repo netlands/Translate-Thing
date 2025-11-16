@@ -360,6 +360,7 @@ ready(function(){ // $(document).ready(function () {
 				$("#groupx").val(previewedTermData.group);
 				$("#notex").val(previewedTermData.note);
 				$("#idx").val(previewedTermData.id);
+				$("#postIdx").val(previewedTermData.postId);
 
 				const postButton = document.getElementById('PostFromEditButton');
 				if (previewedTermData.postId && previewedTermData.postId.length > 0) {
@@ -445,7 +446,8 @@ ready(function(){ // $(document).ready(function () {
 				priority: $("#priorityx").val(),
 				group: $("#groupx").val(),
 				note: $("#notex").val(),
-				id: $("#idx").val()
+				id: $("#idx").val(),
+				postId: $("#postIdx").val()
 			};
 			doPostToGlossary(entryData);
 			$('#myModalx').modal('hide'); // Close the Edit modal
@@ -989,68 +991,82 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Global function to handle posting to glossary
 function doPostToGlossary(entryData) {
-	if (!entryData) {
-		alert('Could not fetch entry data to post.');
-		return;
-	}
+    if (!entryData) {
+        alert('Could not fetch entry data to post.');
+        return;
+    }
 
-	if (!confirm('Are you sure you want to post this to the glossary blog?')) {
-		return;
-	}
+    const isUpdate = entryData.postId && entryData.postId.length > 0;
 
-	// Hide the Post and Edit buttons when showing confirmation message
-	$('#PostFromPreviewButton').hide();
-	$('#editFromPreviewButton').hide();
+    const confirmationMessage = isUpdate
+        ? 'Are you sure you want to update this post on the glossary blog?'
+        : 'Are you sure you want to post this to the glossary blog?';
 
-	// Show a temporary "posting..." message in the modal
-	$('#confirmationModalBody').text('Posting to glossary...');
-	$('#confirmationModal').modal('show');
+    if (!confirm(confirmationMessage)) {
+        return;
+    }
 
-	// Call the new backend endpoint with the entry data
-	$.ajax({
-		url: '/api/post-to-blogger',
-		type: 'POST',
-		contentType: 'application/json',
-		data: JSON.stringify(entryData)
-	}).done(function(response) {
-		// Show a confirmation dialog with the post ID
-		let successMsg = 'Successfully posted to glossary!';
-		if (response && response.result && response.result.id) {
-			const postId = response.result.id;
-			successMsg += ` (${postId})`;
+    // Hide the Post and Edit buttons when showing confirmation message
+    $('#PostFromPreviewButton').hide();
+    $('#editFromPreviewButton').hide();
 
-			// Now, update the glossary entry with the new postId
-			$.ajax({
-				url: '/api/update-post-id',
-				type: 'POST',
-				data: {
-					id: entryData.id,
-					postId: postId
-				}
-			}).done(function(updateResponse) {
-				if (updateResponse.success) {
-					console.log('Successfully updated postId for entry ' + entryData.id);
-					updateTable(''); // Refresh the table
-				} else {
-					alert('Failed to update postId in the database.');
-				}
-			}).fail(function() {
-				alert('Error calling update-post-id API.');
-			});
-		}
-		$('#confirmationModalBody').text(successMsg);
-	}).fail(function(xhr) {
-		// Check if this is an authentication error
-		if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.authUrl) {
-			// Redirect the user to the authentication URL
-			$('#confirmationModal').modal('hide');
-			window.open(xhr.responseJSON.authUrl, '_blank');
-		} else {
-			let msg = 'Failed to post to glossary.';
-			try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
-			$('#confirmationModalBody').text(msg);
-		}
-	});
+    const postingMessage = isUpdate ? 'Updating post on glossary...' : 'Posting to glossary...';
+    // Show a temporary "posting..." message in the modal
+    $('#confirmationModalBody').text(postingMessage);
+    $('#confirmationModal').modal('show');
+
+    const apiUrl = isUpdate ? '/api/update-post-on-blogger' : '/api/post-to-blogger';
+
+    // Call the new backend endpoint with the entry data
+    $.ajax({
+        url: apiUrl,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(entryData)
+    }).done(function(response) {
+        // Show a confirmation dialog with the post ID
+        let successMsg = isUpdate ? 'Successfully updated post on glossary!' : 'Successfully posted to glossary!';
+        if (response && response.result && response.result.id) {
+            const postId = String(response.result.id);
+            successMsg += ` (${postId})`;
+
+            if (!isUpdate) {
+                // Now, update the glossary entry with the new postId for new posts
+                $.ajax({
+                    url: '/api/update-post-id',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        id: entryData.id,
+                        postId: postId
+                    })
+                }).done(function(updateResponse) {
+                    if (updateResponse.success) {
+                        console.log('Successfully updated postId for entry ' + entryData.id);
+                        updateTable(''); // Refresh the table
+                    } else {
+                        alert('Failed to update postId in the database.');
+                    }
+                }).fail(function() {
+                    alert('Error calling update-post-id API.');
+                });
+            } else {
+                updateTable(''); // For updates, just refresh the table
+            }
+        }
+        $('#confirmationModalBody').text(successMsg);
+    }).fail(function(xhr) {
+        // Check if this is an authentication error
+        if (xhr.status === 401 && xhr.responseJSON && xhr.responseJSON.authUrl) {
+            // Redirect the user to the authentication URL
+            $('#confirmationModal').modal('hide');
+            window.open(xhr.responseJSON.authUrl, '_blank');
+        } else {
+            let msg = isUpdate ? 'Failed to update post on glossary.' : 'Failed to post on glossary.';
+            try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
+            $('#confirmationModalBody').text(msg);
+        }
+    });
 }
 
 window.onload = function () {

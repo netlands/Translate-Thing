@@ -91,7 +91,43 @@ async function updatePostOnBlogger(postData) {
   }
 }
 
-module.exports = { postToBlogger, updatePostOnBlogger, oauth2Client };
+
+async function getPostFromBlogger(postId) {
+  // Token loading/authentication is the same
+  if (fs.existsSync(TOKEN_PATH)) {
+    const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
+    oauth2Client.setCredentials(tokens);
+  } else {
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['https://www.googleapis.com/auth/blogger'],
+    });
+    const error = new Error('Authentication required.');
+    error.authUrl = authUrl;
+    throw error;
+  }
+
+  if (!postId) {
+    throw new Error('postId is required for fetching a post.');
+  }
+
+  const blogger = google.blogger({ version: 'v3', auth: oauth2Client });
+
+  try {
+    const res = await blogger.posts.get({
+      blogId: BLOG_ID,
+      postId: postId,
+    });
+    console.log('✅ Post fetched:', res.data.url);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Failed to fetch post:', err.message);
+    throw err;
+  }
+}
+
+module.exports = { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client };
+
 
 /*
 // Sample post input:

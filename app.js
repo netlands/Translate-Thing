@@ -38,7 +38,7 @@ async function kanaToModernHepburn(kana) {
 
 
 
-const { postToBlogger, updatePostOnBlogger, oauth2Client } = require('./bloggerPoster');
+const { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client } = require('./bloggerPoster');
 
 // body parser for POST
 app.use(express.json());
@@ -1024,6 +1024,27 @@ app.post('/api/update-post-on-blogger', async function (req, res) {
 		}
 		console.error('Error updating post on Blogger:', error.message);
 		res.status(500).json({ message: 'Failed to update post on glossary.', error: error.message });
+	}
+});
+
+app.get('/api/test-blogger-post/:id', async function (req, res) {
+	const postId = req.params.id;
+	if (!postId) {
+		return res.status(400).json({ message: 'Post ID is missing.' });
+	}
+
+	console.log('Server-side (app.js) postId:', postId, 'Type:', typeof postId);
+
+	try {
+		const result = await getPostFromBlogger(postId);
+		res.json(result);
+	} catch (error) {
+		if (error.authUrl) {
+			console.log('Authentication required. Sending auth URL to client.');
+			return res.status(401).json({ message: 'Authentication required.', authUrl: error.authUrl });
+		}
+		console.error('Error fetching post from Blogger:', error.message);
+		res.status(500).json({ message: 'Failed to fetch post from Blogger.', error: error.message });
 	}
 });
 

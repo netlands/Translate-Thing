@@ -97,6 +97,8 @@ async function updatePostOnBlogger(postData) {
 
 
 async function getPostFromBlogger(postId) {
+  console.log('Inside getPostFromBlogger - postId:', postId, 'Type:', typeof postId);
+  console.log('Using BLOG_ID:', BLOG_ID);
   // Token loading/authentication is the same
   if (fs.existsSync(TOKEN_PATH)) {
     const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));

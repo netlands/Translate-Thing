@@ -989,7 +989,32 @@ document.addEventListener('DOMContentLoaded', function () {
 	});
 });
 
-// Global function to handle posting to glossary
+	$(document).on('click', '#TestBloggerPost', function () {
+		const postId = $('#bloggerPostId').val();
+		if (!postId) {
+			alert('Please enter a Blogger Post ID.');
+			return;
+		}
+
+		console.log('Client-side postId:', postId, 'Type:', typeof postId);
+
+		$.ajax({
+			url: `/api/test-blogger-post/${postId}`,
+			type: 'GET',
+			success: function (data) {
+				console.log('Blogger Post Data:', data);
+				alert('Blogger Post Data fetched. Check console for details.');
+			},
+			error: function (xhr) {
+				let msg = 'Error fetching Blogger Post';
+				try { msg = JSON.parse(xhr.responseText).error || JSON.parse(xhr.responseText).message; } catch (e) {}
+				console.error('Error fetching Blogger Post:', msg);
+				alert(msg);
+			}
+		});
+	});
+
+	// Global function to handle posting to glossary
 function doPostToGlossary(entryData) {
     if (!entryData) {
         alert('Could not fetch entry data to post.');

@@ -74,6 +74,10 @@ async function updatePostOnBlogger(postData) {
   const blogger = google.blogger({ version: 'v3', auth: oauth2Client });
 
   try {
+    /*console.log(`Fetching post ${postData.postId} before updating...`);
+    const existingPost = await getPostFromBlogger(postData.postId);
+    console.log('Found post:', existingPost.url);*/
+
     const res = await blogger.posts.update({
       blogId: BLOG_ID,
       postId: postData.postId,

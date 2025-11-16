@@ -52,7 +52,46 @@ async function postToBlogger(postData, isDraft = true) {
   }
 }
 
-module.exports = { postToBlogger, oauth2Client };
+async function updatePostOnBlogger(postData) {
+  // Token loading/authentication is the same
+  if (fs.existsSync(TOKEN_PATH)) {
+    const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
+    oauth2Client.setCredentials(tokens);
+  } else {
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['https://www.googleapis.com/auth/blogger'],
+    });
+    const error = new Error('Authentication required.');
+    error.authUrl = authUrl;
+    throw error;
+  }
+
+  if (!postData.postId) {
+    throw new Error('postId is required for updating a post.');
+  }
+
+  const blogger = google.blogger({ version: 'v3', auth: oauth2Client });
+
+  try {
+    const res = await blogger.posts.update({
+      blogId: BLOG_ID,
+      postId: postData.postId,
+      requestBody: {
+        title: postData.title,
+        content: postData.content,
+        labels: postData.labels || [],
+      },
+    });
+    console.log('✅ Post updated:', res.data.url);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Failed to update post:', err.message);
+    throw err;
+  }
+}
+
+module.exports = { postToBlogger, updatePostOnBlogger, oauth2Client };
 
 /*
 // Sample post input:

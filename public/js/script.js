@@ -294,6 +294,9 @@ ready(function(){ // $(document).ready(function () {
 		console.log('"Display existing entry" button was clicked.');
 
 		if (existingTermData) {
+			if (existingTermData.postId && existingTermData.postId.length > 0) {
+				console.log("Existing post detected");
+			}
 			// Use a one-time event listener to open the edit modal AFTER the add modal is fully closed.
 			// This prevents modal conflicts.
 			$('#myModal').one('hidden.bs.modal', function() {
@@ -310,6 +313,16 @@ ready(function(){ // $(document).ready(function () {
 				$("#groupx").val(existingTermData.group);
 				$("#notex").val(existingTermData.note);
 				$("#idx").val(existingTermData.id);
+				if (document.getElementById("postIdx")) {
+					document.getElementById("postIdx").value = existingTermData.postId;
+				}
+
+				const postButton = document.getElementById('PostFromEditButton');
+				if (existingTermData.postId && existingTermData.postId.length > 0) {
+					postButton.textContent = 'Update Post';
+				} else {
+					postButton.textContent = 'Post';
+				}
 
 				// Now, safely show the "Edit" modal.
 				$('#myModalx').modal('show');
@@ -330,6 +343,9 @@ ready(function(){ // $(document).ready(function () {
 
 	$('#editFromPreviewButton').on('click', function() {
 		if (previewedTermData) {
+			if (previewedTermData.postId && previewedTermData.postId.length > 0) {
+				console.log("Existing post detected");
+			}
 			$('#confirmationModal').one('hidden.bs.modal', function() {
 				// Populate the "Edit" modal (#myModalx) with the previewed data
 				$("#enx").val(previewedTermData.en);
@@ -344,6 +360,13 @@ ready(function(){ // $(document).ready(function () {
 				$("#groupx").val(previewedTermData.group);
 				$("#notex").val(previewedTermData.note);
 				$("#idx").val(previewedTermData.id);
+
+				const postButton = document.getElementById('PostFromEditButton');
+				if (previewedTermData.postId && previewedTermData.postId.length > 0) {
+					postButton.textContent = 'Update Post';
+				} else {
+					postButton.textContent = 'Post';
+				}
 
 				// Now, safely show the "Edit" modal.
 				$('#myModalx').modal('show');
@@ -380,8 +403,13 @@ ready(function(){ // $(document).ready(function () {
 	            priority: $("#priorityx").val(),
 	            group: $("#groupx").val(),
 	            note: $("#notex").val(),
-	            id: $("#idx").val()
+	            id: $("#idx").val(),
+				postId: $("#postIdx").val()
 	        };
+
+			if (entryData.postId && entryData.postId.length > 0) {
+				console.log("Existing post detected");
+			}
 	        
 	        displayTermPreview(entryData, '#termPreview');
 	
@@ -491,7 +519,7 @@ function updateTable(term) {
 				],
 				height: '500px'
 			}).forceRender();
-			try { grid.on('rowClick', (...args) => getFields(JSON.stringify(args))); } catch (e) {}
+			addGridEventHandlers(grid);
 		});
 		return;
 	}
@@ -785,6 +813,14 @@ document.addEventListener('DOMContentLoaded', function () {
 					return;
 				}
 
+				existingPost = false
+				if (entryData.postId != null) {
+				console.log("postId has a value:", entryData.postId);
+					existingPost = true;
+				} else {
+					existingPost = false;
+				}
+				
 				// Fetch both the HTML for the page and the CSS to style it
 				const getHtml = $.ajax({ url: '/api/create-glossary-page', type: 'POST', contentType: 'application/json', data: JSON.stringify(entryData) });
 				const getCss = $.get('/api/glossary-css');
@@ -800,6 +836,13 @@ document.addEventListener('DOMContentLoaded', function () {
 					previewedTermData = entryData;
 					$('#confirmationModalBody').html(styleBlock + pageHtml);
 					$('#confirmationModal').modal('show');
+
+					const postButton = document.getElementById('PostFromPreviewButton');
+					if (existingPost) {
+						postButton.textContent = 'Update Post';
+					} else {
+						postButton.textContent = 'Post';
+					}
 
 					// Show the Post and Edit buttons for preview mode
 					$('#PostFromPreviewButton').show();
@@ -1120,12 +1163,13 @@ for (let i = 0; i < cells.length; i++) {
 alert(result); 
 */
 
+let existingPost = false;
 
-
-function getFields(data) {
+function getFields(row) {
+	existingPost = false;
 	// console.log(data);
-	row = JSON.parse(data);
-	cells = row[1]["_cells"];
+	// row = JSON.parse(data);
+	cells = row["cells"];
 	en = cells[0]["data"];
 	ja = cells[1]["data"];
 	furigana = cells[2]["data"];
@@ -1140,6 +1184,10 @@ function getFields(data) {
 	postId = cells[11]["data"];
 	id = cells[12]["data"];
 	console.log("id:", id, "postId:", postId);
+	if (postId != null && postId !== '') {
+		existingPost = true;
+		console.log("Existing post detected");
+	}
 	
 	document.getElementById("enx").value = en;
 	document.getElementById("jax").value = ja;
@@ -1153,6 +1201,16 @@ function getFields(data) {
 	document.getElementById("groupx").value = group;
 	document.getElementById("notex").value = note;
 	document.getElementById("idx").value = id;
+	if (document.getElementById("postIdx")) {
+		document.getElementById("postIdx").value = postId;
+	}
+
+	const postButton = document.getElementById('PostFromEditButton');
+	if (existingPost) {
+		postButton.textContent = 'Update Post';
+	} else {
+		postButton.textContent = 'Post';
+	}
 
 	// This is now the single source of truth for the context menu.
 	currentRowData = { en, ja, id };
@@ -1161,9 +1219,9 @@ function getFields(data) {
 
 function addGridEventHandlers(grid) {
     try {
-		grid.on('rowClick', (...args) => {
+		grid.on('rowClick', (e, row) => {
 			if (window.getSelection().toString().trim() === '') {
-				getFields(JSON.stringify(args));
+				getFields(row);
 			}
 		});
 

@@ -97,8 +97,8 @@ async function updatePostOnBlogger(postData) {
 
 
 async function getPostFromBlogger(postId) {
-  console.log('Inside getPostFromBlogger - postId:', postId, 'Type:', typeof postId);
-  console.log('Using BLOG_ID:', BLOG_ID);
+  console.log('Post Id:', postId, 'Type:', typeof postId);
+  console.log('BLOG_ID:', BLOG_ID);
   // Token loading/authentication is the same
   if (fs.existsSync(TOKEN_PATH)) {
     const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
@@ -122,7 +122,8 @@ async function getPostFromBlogger(postId) {
   try {
     const res = await blogger.posts.get({
       blogId: BLOG_ID,
-      postId: String(postId)
+      postId: String(postId),
+      view: 'ADMIN' // Add view=ADMIN to fetch draft posts
     });
     console.log('✅ Post fetched:', res.data.url);
     return res.data;

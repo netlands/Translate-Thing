@@ -1032,9 +1032,7 @@ app.get('/api/test-blogger-post/:id', async function (req, res) {
 	if (!postId) {
 		return res.status(400).json({ message: 'Post ID is missing.' });
 	}
-
-	console.log('Server-side (app.js) postId:', postId, 'Type:', typeof postId);
-
+	
 	try {
 		const result = await getPostFromBlogger(postId);
 		res.json(result);

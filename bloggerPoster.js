@@ -120,7 +120,7 @@ async function getPostFromBlogger(postId) {
   try {
     const res = await blogger.posts.get({
       blogId: BLOG_ID,
-      postId: postId,
+      postId: String(postId)
     });
     console.log('✅ Post fetched:', res.data.url);
     return res.data;

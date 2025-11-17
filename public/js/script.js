@@ -21,6 +21,7 @@ function ready(fn) {
  // This variable will hold the data of an existing term if found.
  let existingTermData = null;
  let previewedTermData = null;
+ let exsistingPostData = null;
 
 ready(function(){ // $(document).ready(function () {
 	console.log("Page structure loaded!");
@@ -989,31 +990,6 @@ document.addEventListener('DOMContentLoaded', function () {
 	});
 });
 
-	$(document).on('click', '#TestBloggerPost', function () {
-		const postId = $('#bloggerPostId').val();
-		if (!postId) {
-			alert('Please enter a Blogger Post ID.');
-			return;
-		}
-
-		console.log('Client-side postId:', postId, 'Type:', typeof postId);
-
-		$.ajax({
-			url: `/api/test-blogger-post/${postId}`,
-			type: 'GET',
-			success: function (data) {
-				console.log('Blogger Post Data:', data);
-				alert('Blogger Post Data fetched. Check console for details.');
-			},
-			error: function (xhr) {
-				let msg = 'Error fetching Blogger Post';
-				try { msg = JSON.parse(xhr.responseText).error || JSON.parse(xhr.responseText).message; } catch (e) {}
-				console.error('Error fetching Blogger Post:', msg);
-				alert(msg);
-			}
-		});
-	});
-
 	// Global function to handle posting to glossary
 function doPostToGlossary(entryData) {
     if (!entryData) {
@@ -1208,6 +1184,7 @@ let existingPost = false;
 
 function getFields(row) {
 	existingPost = false;
+	exsistingPostData = null;
 	// console.log(data);
 	// row = JSON.parse(data);
 	cells = row["cells"];
@@ -1227,7 +1204,20 @@ function getFields(row) {
 	console.log("id:", id, "postId:", postId);
 	if (postId != null && postId !== '') {
 		existingPost = true;
-		console.log("Existing post detected");
+		console.log("Existing post detected, fetching data...");
+		$.ajax({
+			url: `/api/test-blogger-post/${postId}`,
+			type: 'GET',
+			success: function (data) {
+				exsistingPostData = data;
+				console.log('Existing Blogger Post Data:', exsistingPostData);
+			},
+			error: function (xhr) {
+				let msg = 'Error fetching existing Blogger Post';
+				try { msg = JSON.parse(xhr.responseText).error || JSON.parse(xhr.responseText).message; } catch (e) {}
+				console.error(msg);
+			}
+		});
 	}
 	
 	document.getElementById("enx").value = en;

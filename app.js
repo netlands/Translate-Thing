@@ -1027,7 +1027,7 @@ app.post('/api/update-post-on-blogger', async function (req, res) {
 	}
 });
 
-app.get('/api/test-blogger-post/:id', async function (req, res) {
+app.get('/api/get-blogger-post/:id', async function (req, res) {
 	const postId = req.params.id;
 	if (!postId) {
 		return res.status(400).json({ message: 'Post ID is missing.' });

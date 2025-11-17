@@ -1206,7 +1206,7 @@ function getFields(row) {
 		existingPost = true;
 		console.log("Existing post detected, fetching data...");
 		$.ajax({
-			url: `/api/test-blogger-post/${postId}`,
+			url: `/api/get-blogger-post/${postId}`,
 			type: 'GET',
 			success: function (data) {
 				exsistingPostData = data;

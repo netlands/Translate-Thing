@@ -41,8 +41,8 @@ async function kanaToModernHepburn(kana) {
 const { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client, cleanPostObject } = require('./bloggerPoster');
 
 // body parser for POST
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const db = require('better-sqlite3')('tm.db', { safeIntegers: true });
 // helper: provide a regexp function to SQLite so we can use whole-word regex matching for quoted terms
 function escapeRegExp(s) {
@@ -1044,6 +1044,57 @@ app.get('/api/get-blogger-post/:id', async function (req, res) {
 		console.error('Error fetching post from Blogger:', error.message);
 		res.status(500).json({ message: 'Failed to fetch post from Blogger.', error: error.message });
 	}
+});
+
+app.post('/api/import-legacy', (req, res) => {
+    const { entries } = req.body;
+
+    if (!entries || !Array.isArray(entries)) {
+        return res.status(400).json({ message: 'Invalid entries data.' });
+    }
+
+    try {
+        // Create the legacy table if it doesn't exist
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS legacy (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                postId TEXT,
+                en TEXT,
+                ja TEXT,
+                ja2 TEXT,
+                furigana TEXT,
+                romaji TEXT,
+                note TEXT,
+                context TEXT,
+                "group" TEXT
+            )
+        `);
+
+        const insert = db.prepare('INSERT INTO legacy (postId, en, ja, ja2, furigana, romaji, note, context, "group") VALUES (@postId, @en, @ja, @ja2, @furigana, @romaji, @note, @context, @group)');
+
+        const insertMany = db.transaction((entries) => {
+            for (const entry of entries) {
+                insert.run({
+                    postId: entry.postId,
+                    en: entry.en,
+                    ja: entry.ja,
+                    ja2: entry.ja2,
+                    furigana: entry.furigana,
+                    romaji: entry.romaji,
+                    note: entry.note,
+                    context: entry.context,
+                    group: entry.group
+                });
+            }
+        });
+
+        insertMany(entries);
+
+        res.json({ message: `${entries.length} legacy entries imported successfully.` });
+    } catch (error) {
+        console.error('Error importing legacy entries:', error);
+        res.status(500).json({ message: 'Error importing legacy entries.' });
+    }
 });
 
 

@@ -48,11 +48,16 @@
 					<li class="nav-item">
 						<a class="nav-link" data-toggle="collapse" data-target=".multi-collapse"
 							href="#glossary">Glossary</a>
-
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#" id="import-legacy-btn">Import Legacy Data</a>
+					</li>
 				</ul>
 			</div>
 		</div>
 	</nav>
+
+	<input type="file" id="legacy-file-input" style="display: none;" accept=".atom" />
 
 	<div class="row">
 		<div class="col collapse multi-collapse container" id="glossary">
@@ -361,6 +366,7 @@
 	<script src="/js/wanakana.min.js"></script>
 
 	<script src="/js/jquery.autoKana.js"></script>
+	<script src="/js/atomParser.js"></script>
 
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {

@@ -462,6 +462,49 @@ ready(function(){ // $(document).ready(function () {
 				alert('No term data available to post from preview.');
 			}
 		});
+
+	$("#import-legacy-btn").on("click", function (e) {
+		e.preventDefault();
+		$("#legacy-file-input").click();
+	});
+
+	$("#legacy-file-input").on("change", function (e) {
+		const file = e.target.files[0];
+		if (!file) {
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = function (e) {
+			const content = e.target.result;
+			try {
+				const entries = atomParser(content);
+				// console.log(entries);
+				$.ajax({
+					url: "/api/import-legacy",
+					type: "POST",
+					contentType: "application/json",
+					data: JSON.stringify({ entries: entries }),
+					success: function (response) {
+						alert(response.message);
+						updateTable("");
+					},
+					error: function (xhr) {
+						let msg = "Error importing legacy entries.";
+						try {
+							msg = JSON.parse(xhr.responseText).message;
+						} catch (e) {}
+						alert(msg);
+					},
+				});
+			} catch (error) {
+				alert("Error parsing XML file: " + error.message);
+			}
+		};
+		reader.readAsText(file);
+		// Reset the file input
+		$(this).val("");
+	});
 	
 		fillTemplate();
 	

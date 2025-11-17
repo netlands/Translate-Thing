@@ -1211,6 +1211,27 @@ function getFields(row) {
 			success: function (data) {
 				exsistingPostData = data;
 				console.log('Existing Blogger Post Data:', exsistingPostData);
+
+				if (exsistingPostData) {
+					// Compare content
+					const prettyNote = prettifyHTML(note || '');
+					const prettyContent = prettifyHTML(exsistingPostData.content || '');
+					if (prettyNote !== prettyContent) {
+						console.log('Content is different.');
+					}
+
+					// Compare title
+					if (en.trim() !== (exsistingPostData.title || '').trim()) {
+						console.log('Title is different.');
+					}
+
+					// Compare labels
+					const modalLabels = group.split(',').map(s => s.trim()).filter(s => s).sort();
+					const postLabels = (exsistingPostData.labels || []).sort();
+					if (JSON.stringify(modalLabels) !== JSON.stringify(postLabels)) {
+						console.log('Labels are different.');
+					}
+				}
 			},
 			error: function (xhr) {
 				let msg = 'Error fetching existing Blogger Post';

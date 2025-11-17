@@ -12,7 +12,7 @@ const kuroshiro = new Kuroshiro();
 
 // Define the table name in a variable.
 // Change 'glossary' to 'legacy' or any other table name to switch.
-const tableName = 'glossary';
+let tableName = 'glossary';
 console.log(`Using table: ${tableName}`);
 
 async function kanaToModernHepburn(kana) {
@@ -97,7 +97,8 @@ app.use('/favicon.ico', express.static(__dirname + '/public/img/favicon.ico'));
 // index page
 app.get('/', function (req, res) {
 	res.render('page/index', {
-		result_from_database: res.body
+		result_from_database: res.body,
+		tableName: tableName
 	});
 });
 
@@ -478,6 +479,12 @@ app.post('/api/execsql', function (req, res) {
 		console.error('SQL exec error:', err);
 		res.status(500).json({ message: 'error', error: err.message });
 	}
+});
+
+app.get('/api/switch-table', (req, res) => {
+    tableName = (tableName === 'glossary') ? 'legacy' : 'glossary';
+    console.log(`Switched table to: ${tableName}`);
+    res.json({ tableName: tableName });
 });
 
 

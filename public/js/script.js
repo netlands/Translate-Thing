@@ -742,6 +742,22 @@ $(document).on('click', '#ShowDuplicates', function () {
 	}
 });
 
+$(document).on('click', '#SwitchTable', function () {
+    $.ajax({
+        url: '/api/switch-table',
+        type: 'GET',
+        success: function (data) {
+            const newTableName = data.tableName;
+            const buttonText = `Switch to ${newTableName === 'glossary' ? 'Legacy' : 'Glossary'} Table`;
+            $('#SwitchTable').text(buttonText);
+            updateTable('');
+        },
+        error: function () {
+            alert('Error switching tables.');
+        }
+    });
+});
+
 // Right-click context menu for glossary table
 document.addEventListener('DOMContentLoaded', function () {
 	const tableContainer = document.getElementById('table');

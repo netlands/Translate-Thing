@@ -80,6 +80,13 @@
 				<button type="button" class="btn btn-info btn-block" id="ShowDuplicates">Show duplicate terms only</button>
 			</div>
 
+			<!-- Button to switch table -->
+			<div class="pt-2">
+				<button type="button" class="btn btn-secondary btn-block" id="SwitchTable">
+					Switch to <%= tableName === 'glossary' ? 'Legacy' : 'Glossary' %> Table
+				</button>
+			</div>
+
 			<!-- SQL execution panel (SELECT only) -->
 			<div class="pt-2">
 				<label class="sr-only" for="sqlQuery">SQL Query</label>

@@ -1213,24 +1213,39 @@ function getFields(row) {
 				console.log('Existing Blogger Post Data:', exsistingPostData);
 
 				if (exsistingPostData) {
-					// Compare content
-					const prettyNote = prettifyHTML(note || '');
-					const prettyContent = prettifyHTML(exsistingPostData.content || '');
-					if (prettyNote !== prettyContent) {
-						console.log('Content is different.');
-					}
+					const entryData = { en, ja, furigana, romaji, ja2, en2, context, type: typeStr, priority, group, note, id, postId };
+					
+					$.ajax({
+						url: '/api/create-glossary-page',
+						type: 'POST',
+						contentType: 'application/json',
+						data: JSON.stringify(entryData)
+					}).done(function(response) {
+						const pageHtml = response.html;
+						const prettyNote = prettifyHTML(pageHtml || '');
+						const prettyContent = prettifyHTML(exsistingPostData.content || '');
 
-					// Compare title
-					if (en.trim() !== (exsistingPostData.title || '').trim()) {
-						console.log('Title is different.');
-					}
+						//console.log('Prettified Note for comparison:', prettyNote);
+						//console.log('Prettified Content from Blogger:', prettyContent);
 
-					// Compare labels
-					const modalLabels = group.split(',').map(s => s.trim()).filter(s => s).sort();
-					const postLabels = (exsistingPostData.labels || []).sort();
-					if (JSON.stringify(modalLabels) !== JSON.stringify(postLabels)) {
-						console.log('Labels are different.');
-					}
+						if (prettyNote !== prettyContent) {
+							console.log('Content is different.');
+						}
+
+						// Compare title
+						if (en.trim() !== (exsistingPostData.title || '').trim()) {
+							console.log('Title is different.');
+						}
+
+						// Compare labels
+						const modalLabels = group.split(',').map(s => s.trim()).filter(s => s).sort();
+						const postLabels = (exsistingPostData.labels || []).sort();
+						if (JSON.stringify(modalLabels) !== JSON.stringify(postLabels)) {
+							console.log('Labels are different.');
+						}
+					}).fail(function() {
+						console.error('Could not create post page for comparison.');
+					});
 				}
 			},
 			error: function (xhr) {
@@ -1418,6 +1433,10 @@ function ensureRefreshObserver() {
 
 
 function prettifyHTML(html) {
+  html = html.replace(/<!--more-->/g, "<a name='more'></a>");
+  // Remove comments
+  //html = html.replace(/<!--[\s\S]*?-->/g, '');
+
   const selfClosing = ['area','base','br','col','embed','hr','img','input','link','meta','source','track','wbr'];
   const voidTag = tag => selfClosing.includes(tag.toLowerCase());
 

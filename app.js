@@ -10,6 +10,11 @@ const KuromojiAnalyzer = require("kuroshiro-analyzer-kuromoji");
 
 const kuroshiro = new Kuroshiro();
 
+// Define the table name in a variable.
+// Change 'glossary' to 'legacy' or any other table name to switch.
+const tableName = 'glossary';
+console.log(`Using table: ${tableName}`);
+
 async function kanaToModernHepburn(kana) {
   var romaji = await kuroshiro.convert(kana, {
   to: "romaji",
@@ -218,7 +223,7 @@ app.get('/api/deleteterm', function (req, res) {
 		return;
 	}
 	try {
-		const stmt = db.prepare('DELETE FROM glossary WHERE id = ?');
+		const stmt = db.prepare(`DELETE FROM ${tableName} WHERE id = ?`);
 		const info = stmt.run(id);
 		if (info.changes && info.changes > 0) {
 			res.json({ message: 'term deleted' });
@@ -239,7 +244,7 @@ app.post('/api/update-post-id', function (req, res) {
 	}
 
 	try {
-		const stmt = db.prepare('UPDATE glossary SET postId = ? WHERE id = ?');
+		const stmt = db.prepare(`UPDATE ${tableName} SET postId = ? WHERE id = ?`);
 		const info = stmt.run(postId, id);
 
 		if (info.changes > 0) {
@@ -262,7 +267,7 @@ app.get('/api/glossary/check', function (req, res) {
 
     try {
         // Find one term matching the English value, case-insensitively
-        const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE');
+        const stmt = db.prepare(`SELECT * FROM ${tableName} WHERE en = ? COLLATE NOCASE`);
         const term = stmt.get(englishTerm);
 
         if (term) {
@@ -278,11 +283,11 @@ app.get('/api/glossary/check', function (req, res) {
 
 app.get('/api/getterm', function (req, res) {
 	// http://127.0.0.1:3000/api/getterm?term=silk
-	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority');
+	const stmt = db.prepare(`SELECT * FROM ${tableName} WHERE en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE ORDER BY priority`);
 	const row = stmt.get(req.query.term, req.query.term, req.query.term);
 
 	if (row === undefined) {
-		const stmt2 = db.prepare('SELECT * FROM glossary WHERE ja = ? OR ja2 = ? OR furigana = ?');
+		const stmt2 = db.prepare(`SELECT * FROM ${tableName} WHERE ja = ? OR ja2 = ? OR furigana = ?`);
 		const row2 = stmt2.get(req.query.term, req.query.term, req.query.term);
 		if (row2 === undefined) {
 			res.json({
@@ -302,7 +307,7 @@ app.get('/api/getterm', function (req, res) {
 });
 
 app.get('/api/gettable', function (req, res) {
-	const stmt = db.prepare('SELECT * FROM glossary ORDER BY type, "group", priority ');
+	const stmt = db.prepare(`SELECT * FROM ${tableName} ORDER BY type, "group", priority `);
 	const row = stmt.all();
 
 	if (row === undefined) {
@@ -319,9 +324,9 @@ app.get('/api/gettable', function (req, res) {
 app.get('/api/getduplicates', function (req, res) {
 	try {
 		// Detect duplicates in either en or ja (case-insensitive, trimmed)
-		const sql = `SELECT * FROM glossary
-			WHERE lower(trim(en)) IN (SELECT lower(trim(en)) FROM glossary GROUP BY lower(trim(en)) HAVING COUNT(*)>1)
-			   OR lower(trim(ja)) IN (SELECT lower(trim(ja)) FROM glossary GROUP BY lower(trim(ja)) HAVING COUNT(*)>1)
+		const sql = `SELECT * FROM ${tableName}
+			WHERE lower(trim(en)) IN (SELECT lower(trim(en)) FROM ${tableName} GROUP BY lower(trim(en)) HAVING COUNT(*)>1)
+			   OR lower(trim(ja)) IN (SELECT lower(trim(ja)) FROM ${tableName} GROUP BY lower(trim(ja)) HAVING COUNT(*)>1)
 			ORDER BY lower(trim(en)) COLLATE NOCASE, lower(trim(ja)) COLLATE NOCASE`;
 		const stmt = db.prepare(sql);
 		const rows = stmt.all();
@@ -450,7 +455,7 @@ app.post('/api/execsql', function (req, res) {
 		}
 
 		const whereSql = whereSqlPieces.join(' OR ');
-		const finalSql = `SELECT * FROM glossary WHERE ${whereSql} ORDER BY type, "group", priority`;
+		const finalSql = `SELECT * FROM ${tableName} WHERE ${whereSql} ORDER BY type, "group", priority`;
 
 		// Build a human-readable SQL for display by substituting parameter values into the query.
 		// We do NOT execute this display SQL; execution below uses parameterized statement to remain safe.
@@ -477,11 +482,11 @@ app.post('/api/execsql', function (req, res) {
 
 
 app.get('/api/getrows', function (req, res) {
-	const stmt = db.prepare('SELECT * FROM glossary WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE  ORDER BY type, "group", priority ');
+	const stmt = db.prepare(`SELECT * FROM ${tableName} WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE  ORDER BY type, "group", priority `);
 	const row = stmt.all(req.query.term, req.query.term, req.query.term);
 
 	if (row === undefined) {
-		const stmt2 = db.prepare('SELECT * FROM glossary WHERE ja = ? OR ja2 = ? OR furigana = ?');
+		const stmt2 = db.prepare(`SELECT * FROM ${tableName} WHERE ja = ? OR ja2 = ? OR furigana = ?`);
 		const row2 = stmt2.all(req.query.term, req.query.term, req.query.term);
 		if (row2 === undefined) {
 			res.json({
@@ -502,13 +507,13 @@ app.get('/api/getrows', function (req, res) {
 
 
 function addTerm(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note) {
-	const stmt = db.prepare('INSERT INTO glossary (en,ja,furigana,romaji,ja2,en2,context,type,priority,"group",note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+	const stmt = db.prepare(`INSERT INTO ${tableName} (en,ja,furigana,romaji,ja2,en2,context,type,priority,"group",note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 	const info = stmt.run(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note);
 	// console.log(info.changes); // => 1
 }
 
 function updateTerm(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note, id) {
-	const stmt = db.prepare('UPDATE glossary SET en = ?, ja = ?, furigana = ?, romaji = ?, ja2 = ?, en2 = ?, context = ?, type = ?, priority = ?, "group" = ?, note = ? WHERE id = ? '); 
+	const stmt = db.prepare(`UPDATE ${tableName} SET en = ?, ja = ?, furigana = ?, romaji = ?, ja2 = ?, en2 = ?, context = ?, type = ?, priority = ?, "group" = ?, note = ? WHERE id = ? `); 
 	const updates = stmt.run(en, ja, furigana, romaji, ja2, en2, context, type, priority, group, note, id);
 	// console.log(updates.changes); // => 1
 }
@@ -528,7 +533,7 @@ function translateProperties(original) {
 	categoryJa = "";
 	try {
 		firstLine = /^([^\.]+?)\./g.exec(content)[0].trim();
-		const stmt = db.prepare('SELECT en, ja FROM glossary WHERE type = ? COLLATE NOCASE');
+		const stmt = db.prepare(`SELECT en, ja FROM ${tableName} WHERE type = ? COLLATE NOCASE`);
 		const rows = stmt.all("category");
 		for (let i = 0; i < rows.length; i++) {
 			// console.log(rows[i].en);
@@ -592,7 +597,7 @@ function translateProperties(original) {
 		translation = "";
 		propertyName = name;
 		propertyEn = name;
-		const row = db.prepare("SELECT * FROM glossary WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE) ORDER BY priority").get(name, name);
+		const row = db.prepare(`SELECT * FROM ${tableName} WHERE (en = ? COLLATE NOCASE OR en2 = ? COLLATE NOCASE) ORDER BY priority`).get(name, name);
 		if (row !== undefined) {
 			if (row.type == "property") {
 				translation = row.ja;
@@ -848,7 +853,7 @@ function getTranslation(term) {
 		}
 	} else {
 	const row2 = db.prepare(`
-	SELECT * FROM glossary
+	SELECT * FROM ${tableName}
 	WHERE en = ? COLLATE NOCASE
 		OR romaji = ? COLLATE NOCASE
 		OR ', ' || LOWER(en2) || ', ' LIKE '%, ' || LOWER(?) || ', %'

@@ -133,7 +133,20 @@ async function getPostFromBlogger(postId) {
   }
 }
 
-module.exports = { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client };
+function cleanPostObject(post) {
+  if (!post) {
+    return null;
+  }
+  return {
+    id: post.id,
+    status: post.status,
+    title: post.title,
+    content: post.content,
+    labels: post.labels || [],
+  };
+}
+
+module.exports = { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client, cleanPostObject };
 
 
 /*

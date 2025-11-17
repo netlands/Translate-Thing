@@ -1405,6 +1405,35 @@ function ensureRefreshObserver() {
 	}
 }
 
+
+function prettifyHTML(html) {
+  const selfClosing = ['area','base','br','col','embed','hr','img','input','link','meta','source','track','wbr'];
+  const voidTag = tag => selfClosing.includes(tag.toLowerCase());
+
+  // Normalize spacing between tags
+  html = html.replace(/>\s+</g, '><');
+
+  // Add line breaks between tags
+  html = html.replace(/></g, '>\n<');
+
+  // Split into lines and indent
+  const lines = html.split('\n');
+  let indent = 0;
+  const indentChar = '  '; // 2 spaces
+
+  return lines.map(line => {
+    const trimmed = line.trim();
+
+    if (trimmed.match(/^<\/\w/)) indent--; // closing tag
+    const formatted = indentChar.repeat(indent) + trimmed;
+    if (trimmed.match(/^<\w[^>]*[^/]?>/) && !voidTag(trimmed.match(/^<(\w+)/)?.[1])) indent++; // opening tag
+    return formatted;
+  }).join('\n');
+}
+
+
+
+
 // Try initial placement after load and schedule a couple attempts to cover timing
 setTimeout(placeRefreshInline, 200);
 window.addEventListener('load', function () { setTimeout(placeRefreshInline, 300); });

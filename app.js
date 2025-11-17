@@ -38,7 +38,7 @@ async function kanaToModernHepburn(kana) {
 
 
 
-const { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client } = require('./bloggerPoster');
+const { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client, cleanPostObject } = require('./bloggerPoster');
 
 // body parser for POST
 app.use(express.json());
@@ -897,8 +897,8 @@ async function createPostPage(entry) {
 		.replace(/%en%/g, '<span class="en">' + entry.en + '</span>' || '')
 		.replace(/%ja%/g, '<span class="ja">' + entry.ja + '</span>' || '')
 		.replace(/%romaji%/g, '<span class="romaji">' + entry.romaji + '</span>' || '')		
-		.replace(/%group%/g, (entry.group || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="label">${s}</span>`).join(' '))
-		.replace(/%context%/g, (entry.context || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">${s}</span>`).join(' '))
+		.replace(/%group%/g, (entry.group || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span hidden class="label">${s}</span>`).join(' '))
+		.replace(/%context%/g, (entry.context || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="tag">#${s}</span>`).join(' '))
 		.replace(/%ja2%/g, (entry.ja2 || '').split(',').map(s => s.trim()).filter(Boolean).map(s => `<span class="ja-alternative-writing">${s}</span>`).join(' '))
 
 		if (entry.ja != entry.furigana) {
@@ -1035,7 +1035,7 @@ app.get('/api/test-blogger-post/:id', async function (req, res) {
 	
 	try {
 		const result = await getPostFromBlogger(postId);
-		res.json(result);
+		res.json(cleanPostObject(result));
 	} catch (error) {
 		if (error.authUrl) {
 			console.log('Authentication required. Sending auth URL to client.');

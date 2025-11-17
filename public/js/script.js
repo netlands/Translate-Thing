@@ -1183,6 +1183,11 @@ alert(result);
 let existingPost = false;
 
 function getFields(row) {
+	// Reset background colors
+    $('#notex').css('background-color', '');
+    $('#enx').css('background-color', '');
+    $('#groupx').css('background-color', '');
+
 	existingPost = false;
 	exsistingPostData = null;
 	// console.log(data);
@@ -1230,11 +1235,13 @@ function getFields(row) {
 
 						if (prettyNote !== prettyContent) {
 							console.log('Content is different.');
+							$('#notex').css('background-color', '#FFE4E1');
 						}
 
 						// Compare title
 						if (en.trim() !== (exsistingPostData.title || '').trim()) {
 							console.log('Title is different.');
+							$('#enx').css('background-color', '#FFE4E1');
 						}
 
 						// Compare labels
@@ -1242,6 +1249,7 @@ function getFields(row) {
 						const postLabels = (exsistingPostData.labels || []).sort();
 						if (JSON.stringify(modalLabels) !== JSON.stringify(postLabels)) {
 							console.log('Labels are different.');
+							$('#groupx').css('background-color', '#FFE4E1');
 						}
 					}).fail(function() {
 						console.error('Could not create post page for comparison.');

@@ -13,6 +13,7 @@
     "better-sqlite3": "^11.5.0",
     "bootstrap": "^4.6.2",
     "bootstrap-select": "^1.13.18",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.8",
@@ -20,13 +21,15 @@
     "googleapis": "^166.0.0",
     "got": ">=11.8.5",
     "gridjs": "^5.0.2",
+    "he": "^1.2.0",
     "jquery": "^3.3.1",
     "kuroshiro": "^1.2.0",
     "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "nodemon": "^2.0.12",
     "open": "^8.2.1",
     "tar": "^6.1.11",
-    "wanakana": "^4.0.2"
+    "wanakana": "^4.0.2",
+    "xml2js": "^0.6.2"
   },
   "//": "better-sqlite3 requires pre-build version"
 }

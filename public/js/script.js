@@ -552,6 +552,15 @@ ready(function(){ // $(document).ready(function () {
 			}
 		});
 	
+	
+	    // Show/hide "Import Legacy Data" based on glossary visibility
+	    $('#glossary').on('show.bs.collapse', function () {
+	        $('#import-legacy-li').show();
+	    });
+	
+	    $('#glossary').on('hide.bs.collapse', function () {
+	        $('#import-legacy-li').hide();
+	    });
 	});
 	
 	function displayTermPreview(entryData, targetElement) {

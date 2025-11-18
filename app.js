@@ -505,19 +505,22 @@ app.post('/api/move-to-glossary', (req, res) => {
 
         // 2. Insert the entry into the glossary table, letting the DB generate the new ID.
         const insertStmt = db.prepare(`
-            INSERT INTO glossary (en, ja, furigana, romaji, ja2, context, "group", note)
-            VALUES (@en, @ja, @furigana, @romaji, @ja2, @context, @group, @note)
+            INSERT INTO glossary (en, ja, furigana, romaji, ja2, en2, context, type, priority, "group", note)
+            VALUES (@en, @ja, @furigana, @romaji, @ja2, @en2, @context, @type, @priority, @group, @note)
         `);
         
         const info = insertStmt.run({
-            en: legacyEntry.en,
-            ja: legacyEntry.ja,
-            furigana: legacyEntry.furigana,
-            romaji: legacyEntry.romaji,
-            ja2: legacyEntry.ja2,
-            context: legacyEntry.context,
-            group: legacyEntry.group,
-            note: legacyEntry.note
+            en: legacyEntry.en ?? '',
+            ja: legacyEntry.ja ?? '',
+            furigana: legacyEntry.furigana ?? '',
+            romaji: legacyEntry.romaji ?? '',
+            ja2: legacyEntry.ja2 ?? '',
+            en2: legacyEntry.en2 ?? '',			
+            context: legacyEntry.context ?? '',
+            group: legacyEntry.group ?? '',
+            type: legacyEntry.type ?? '',
+            priority: legacyEntry.priority ?? '',						
+            note: legacyEntry.note ?? ''
         });
 
         const newGlossaryId = info.lastInsertRowid;

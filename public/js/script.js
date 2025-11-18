@@ -510,6 +510,11 @@ ready(function(){ // $(document).ready(function () {
 
 		// Maximize modal
 		$(document).on('click', '.maximize-modal', function () {
+			if ($(this).closest('.modal').find('.modal-dialog').hasClass('modal-lg')) {
+				$(this).closest('.modal').find('.modal-dialog').removeClass('modal-lg').addClass('modal-xl');
+			} else {
+				$(this).closest('.modal').find('.modal-dialog').removeClass('modal-xl').addClass('modal-lg');
+			}
 			$(this).closest('.modal').find('.modal-dialog').toggleClass('modal-maximized');
 			// Also toggle a class on the button to change the icon
 			$(this).toggleClass('maximized');

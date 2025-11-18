@@ -189,6 +189,31 @@ ready(function(){ // $(document).ready(function () {
 		});
 	});
 
+	$(document).on('click', '#MoveToGlossaryButton', function() {
+		const id = $("#idx").val();
+		if (id) {
+			if (confirm('Are you sure you want to move this entry to the main glossary?')) {
+				$.ajax({
+					url: '/api/move-to-glossary',
+					type: 'POST',
+					data: { id: id },
+					success: function(response) {
+						console.log(response.message);
+						$('#myModalx').modal('hide');
+						updateTable('');
+					},
+					error: function(xhr) {
+						let msg = 'Error moving entry.';
+						try { msg = JSON.parse(xhr.responseText).message; } catch (e) {}
+						alert(msg);
+					}
+				});
+			}
+		} else {
+			alert('Could not determine the ID of the entry to move.');
+		}
+	});
+
 
 	$(document).on('show.bs.modal', '#myModal', function () {
 		// Use try & catch for unsupported browser
@@ -1265,6 +1290,15 @@ function getFields(row) {
     $('#notex').css('background-color', '');
     $('#enx').css('background-color', '');
     $('#groupx').css('background-color', '');
+
+    // Show/hide "Move to Glossary" button
+    const switchButtonText = $('#SwitchTable').text();
+    const moveButton = $('#MoveToGlossaryButton');
+    if (switchButtonText.includes('Glossary')) { // Legacy table is active
+        moveButton.show();
+    } else {
+        moveButton.hide();
+    }
 
 	existingPost = false;
 	exsistingPostData = null;

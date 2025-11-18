@@ -487,6 +487,68 @@ app.get('/api/switch-table', (req, res) => {
     res.json({ tableName: tableName });
 });
 
+app.post('/api/move-to-glossary', (req, res) => {
+    const { id } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ message: 'Entry ID is missing.' });
+    }
+
+    // Use a transaction to ensure atomicity
+    const moveTransaction = db.transaction(() => {
+        // 1. Get the entry from the legacy table
+        const legacyEntry = db.prepare('SELECT * FROM legacy WHERE id = ?').get(id);
+
+        if (!legacyEntry) {
+            throw new Error('Entry not found in legacy table.');
+        }
+
+        // 2. Insert the entry into the glossary table, letting the DB generate the new ID.
+        const insertStmt = db.prepare(`
+            INSERT INTO glossary (en, ja, furigana, romaji, ja2, context, "group", note)
+            VALUES (@en, @ja, @furigana, @romaji, @ja2, @context, @group, @note)
+        `);
+        
+        const info = insertStmt.run({
+            en: legacyEntry.en,
+            ja: legacyEntry.ja,
+            furigana: legacyEntry.furigana,
+            romaji: legacyEntry.romaji,
+            ja2: legacyEntry.ja2,
+            context: legacyEntry.context,
+            group: legacyEntry.group,
+            note: legacyEntry.note
+        });
+
+        const newGlossaryId = info.lastInsertRowid;
+
+        // If there was a postId, update the new glossary entry with it.
+        if (legacyEntry.postId && newGlossaryId) {
+            const updatePostIdStmt = db.prepare('UPDATE glossary SET postId = ? WHERE id = ?');
+            updatePostIdStmt.run(legacyEntry.postId, newGlossaryId);
+        }
+
+        // 3. Delete the entry from the legacy table
+        const deleteStmt = db.prepare('DELETE FROM legacy WHERE id = ?');
+        const deleteInfo = deleteStmt.run(id);
+        if (deleteInfo.changes === 0) {
+            throw new Error('Failed to delete entry from legacy table after inserting into glossary.');
+        }
+    });
+
+    try {
+        moveTransaction();
+        res.json({ message: 'Entry moved to glossary successfully.' });
+    } catch (error) {
+        console.error('Error moving entry:', error);
+        // Check for specific error message to return 404
+        if (error.message.includes('Entry not found')) {
+            return res.status(404).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'An error occurred while moving the entry.' });
+    }
+});
+
 
 app.get('/api/getrows', function (req, res) {
 	const stmt = db.prepare(`SELECT * FROM ${tableName} WHERE en = ? OR en2 = ? COLLATE NOCASE OR romaji = ? COLLATE NOCASE  ORDER BY type, "group", priority `);

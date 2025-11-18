@@ -309,9 +309,9 @@
 								aria-hidden="true">&times;</span></button>
 					</div>
 				</div>
-				<div class="modal-body">
+				<div class="modal-body d-flex flex-column">
 					<div id="termPreview" style="display: none;"></div>
-					<form id="updateTerm">
+					<form id="updateTerm" class="d-flex flex-column flex-grow-1">
 						<div class="form-group">
 							<label class="sr-only" for="enx">English</label>
 							<input type="text" class="form-control" id="enx" placeholder="English" required>
@@ -365,9 +365,9 @@
 							<label class="sr-only" for="groupx">Group</label>
 							<input type="text" class="form-control" id="groupx" placeholder="Group (optional)">
 						</div>
-						<div class="form-group">
+						<div class="form-group d-flex flex-column flex-grow-1">
 							<label class="sr-only" for="notex">Note</label>
-							<textarea rows=3 class="form-control" id="notex" placeholder="Note (optional)"></textarea>
+							<textarea class="form-control flex-grow-1" id="notex" placeholder="Note (optional)"></textarea>
 							<!--input type="text" class="form-control" id="notex" placeholder="Note (optional)"-->
 						</div>
 

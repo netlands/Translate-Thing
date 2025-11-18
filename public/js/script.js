@@ -507,6 +507,20 @@ ready(function(){ // $(document).ready(function () {
 	});
 	
 		fillTemplate();
+
+		// Maximize modal
+		$(document).on('click', '.maximize-modal', function () {
+			$(this).closest('.modal').find('.modal-dialog').toggleClass('modal-maximized');
+			// Also toggle a class on the button to change the icon
+			$(this).toggleClass('maximized');
+			if ($(this).hasClass('maximized')) {
+				$(this).html('&#x1F5D5;'); // Restore icon
+				$(this).attr('aria-label', 'Restore');
+			} else {
+				$(this).html('&#x1F5D6;'); // Maximize icon
+				$(this).attr('aria-label', 'Maximize');
+			}
+		});
 	
 	});
 	

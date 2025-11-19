@@ -349,8 +349,6 @@ ready(function(){ // $(document).ready(function () {
 				} else {
 					postButton.textContent = 'Post';
 				}
-				
-				$('#PostFromPreviewButton').hide;
 
 				// Now, safely show the "Edit" modal.
 				$('#myModalx').modal('show');

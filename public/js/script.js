@@ -349,6 +349,8 @@ ready(function(){ // $(document).ready(function () {
 				} else {
 					postButton.textContent = 'Post';
 				}
+				
+				$('#PostFromPreviewButton').hide;
 
 				// Now, safely show the "Edit" modal.
 				$('#myModalx').modal('show');
@@ -408,12 +410,14 @@ ready(function(){ // $(document).ready(function () {
 
 	    $('#myModalx').on('hidden.bs.modal', function () {
 	        // Reset the view to edit mode when the modal is closed
-	        $('#updateTerm').show();
+	        $('#updateTerm').css('display', 'flex');
 	        $('#termPreview').hide();
 	        $('#viewTermButton').show();
 	        $('#backToEditButton').hide();
 	        $('#UButton').show();
 	        $('#DButton').show();
+	        $('#PostFromEditButton').show();
+	        //$('#MoveToGlossaryButton').show();
 			$('#myModalx .modal-title').text('Edit Term');
 	    });
 	
@@ -440,21 +444,24 @@ ready(function(){ // $(document).ready(function () {
 	        
 	        displayTermPreview(entryData, '#termPreview');
 	
-	        $('#updateTerm').hide();
+	        document.getElementById('updateTerm').style.setProperty('display', 'none', 'important');
 	        $('#termPreview').show();
 	        $('#viewTermButton').hide();
 	        $('#backToEditButton').show();
-	        $('#UButton').hide();
-	        $('#DButton').hide();
+	        $('#UButton').show();
+	        $('#DButton').show();
+	        $('#PostFromEditButton').show();
+	        $('#MoveToGlossaryButton').hide();
 	    });
-	
-	    $('#backToEditButton').on('click', function() {
-	        $('#updateTerm').show();
-	        $('#termPreview').hide();
+	    $('#backToEditButton').on('click', function() {	    
+	    	$('#updateTerm').css('display', 'flex');	        
+			$('#termPreview').hide();
 	        $('#viewTermButton').show();
 	        $('#backToEditButton').hide();
 	        $('#UButton').show();
 	        $('#DButton').show();
+	        $('#PostFromEditButton').show();
+	        //$('#MoveToGlossaryButton').show();
 			$('#myModalx .modal-title').text('Edit Term');
 	    });
 
@@ -550,6 +557,7 @@ ready(function(){ // $(document).ready(function () {
 				$(this).html('&#x1F5D6;'); // Maximize icon
 				$(this).attr('aria-label', 'Maximize');
 			}
+			$(this).blur();
 		});
 	
 	

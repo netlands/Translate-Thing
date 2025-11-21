@@ -22,6 +22,7 @@ function ready(fn) {
  let existingTermData = null;
  let previewedTermData = null;
  let exsistingPostData = null;
+let originalEditData = null;
 
 ready(function(){ // $(document).ready(function () {
 	console.log("Page structure loaded!");
@@ -315,7 +316,7 @@ ready(function(){ // $(document).ready(function () {
 			const header = document.querySelector('#myModalx .modal-header');
 			if (!header) return;
 			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
-			else if (ps === 'DRAFT') header.style.backgroundColor = 'lightcoral';
+			else if (ps === 'DRAFT') header.style.backgroundColor = 'lemonchiffon';
 			else header.style.backgroundColor = '';
 
 			// Show/hide Publish / Set Draft buttons based on status
@@ -1025,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', function () {
 							const hdr = document.querySelector('#confirmationModal .modal-header');
 							if (hdr) {
 								if (ps === 'ACTIVE') hdr.style.backgroundColor = 'lightgreen';
-								else if (ps === 'DRAFT') hdr.style.backgroundColor = 'lightcoral';
+								else if (ps === 'DRAFT') hdr.style.backgroundColor = 'lemonchiffon';
 								else hdr.style.backgroundColor = '';
 							}
 						} catch (e) {}
@@ -1426,7 +1427,7 @@ function getFields(row) {
 								if (resp && resp.success) {
 									// reflect in-modal fields and UI
 									$('#postStatusx').val(mappedStatus);
-									try { document.querySelector('#myModalx .modal-header').style.backgroundColor = mappedStatus === 'ACTIVE' ? 'lightgreen' : 'lightcoral'; } catch (e) {}
+									try { document.querySelector('#myModalx .modal-header').style.backgroundColor = mappedStatus === 'ACTIVE' ? 'lightgreen' : 'lemonchiffon'; } catch (e) {} //lightcoral
 									// toggle edit modal buttons
 									try { document.getElementById('PublishButton').style.display = mappedStatus === 'ACTIVE' ? 'none' : 'inline-block'; } catch (e) {}
 									try { document.getElementById('SetDraftButton').style.display = mappedStatus === 'ACTIVE' ? 'inline-block' : 'none'; } catch (e) {}
@@ -1512,13 +1513,32 @@ function getFields(row) {
 	// This is now the single source of truth for the context menu.
 	currentRowData = { en, ja, id };
 
-	// Color the modal header based on postStatus (ACTIVE -> lightgreen, DRAFT -> lightcoral)
+	// Capture the original values shown in the edit modal so we can detect changes
+	try {
+		originalEditData = {
+			en: (document.getElementById('enx').value || '').toString().trim(),
+			ja: (document.getElementById('jax').value || '').toString().trim(),
+			furigana: (document.getElementById('furiganax').value || '').toString().trim(),
+			romaji: (document.getElementById('romajix').value || '').toString().trim(),
+			ja2: (document.getElementById('ja2x').value || '').toString().trim(),
+			en2: (document.getElementById('en2x').value || '').toString().trim(),
+			context: (document.getElementById('contextx').value || '').toString().trim(),
+			type: (document.getElementById('typex').value || '').toString(),
+			priority: (document.getElementById('priorityx').value || '').toString(),
+			group: (document.getElementById('groupx').value || '').toString().trim(),
+			note: (document.getElementById('notex').value || '').toString().trim()
+		};
+		// Initialize Update button state
+		try { checkUpdateButtonState(); } catch (e) {}
+	} catch (e) {}
+
+	// Color the modal header based on postStatus (ACTIVE -> lightgreen, DRAFT -> lemonchiffon) lightcoral
 	try {
 		const header = document.querySelector('#myModalx .modal-header');
 		const ps = (postStatus || '').toString().trim().toUpperCase();
 		if (header) {
 			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
-			else if (ps === 'DRAFT') header.style.backgroundColor = 'lightcoral';
+			else if (ps === 'DRAFT') header.style.backgroundColor = 'lemonchiffon';
 			else header.style.backgroundColor = '';
 		}
 	} catch (e) { console.error('Failed to set modal header color', e); }
@@ -1551,6 +1571,45 @@ function addGridEventHandlers(grid) {
 		console.error("Error adding grid event handlers", e);
 	}
 }
+
+// Enable the Update button only when any field in the edit modal differs from the original values
+function checkUpdateButtonState() {
+	try {
+		const btn = document.getElementById('UButton');
+		if (!btn) return;
+		if (!originalEditData) { btn.disabled = true; return; }
+		const cur = {
+			en: (document.getElementById('enx').value || '').toString().trim(),
+			ja: (document.getElementById('jax').value || '').toString().trim(),
+			furigana: (document.getElementById('furiganax').value || '').toString().trim(),
+			romaji: (document.getElementById('romajix').value || '').toString().trim(),
+			ja2: (document.getElementById('ja2x').value || '').toString().trim(),
+			en2: (document.getElementById('en2x').value || '').toString().trim(),
+			context: (document.getElementById('contextx').value || '').toString().trim(),
+			type: (document.getElementById('typex').value || '').toString(),
+			priority: (document.getElementById('priorityx').value || '').toString(),
+			group: (document.getElementById('groupx').value || '').toString().trim(),
+			note: (document.getElementById('notex').value || '').toString().trim()
+		};
+
+		// Compare fields
+		let changed = false;
+		for (const k of Object.keys(originalEditData)) {
+			if ((originalEditData[k] || '') !== (cur[k] || '')) { changed = true; break; }
+		}
+		btn.disabled = !changed;
+	} catch (e) { console.error('checkUpdateButtonState error', e); }
+}
+
+// Watch input changes inside the edit modal to toggle the Update button
+$(document).on('input change', '#enx,#jax,#furiganax,#romajix,#ja2x,#en2x,#contextx,#typex,#priorityx,#groupx,#notex', function () {
+	try { checkUpdateButtonState(); } catch (e) {}
+});
+
+// When the edit modal is hidden, disable the Update button
+$('#myModalx').on('hidden.bs.modal', function () {
+	try { document.getElementById('UButton').disabled = true; } catch (e) {}
+});
 
 
 // Insert a small refresh button next to GridJS search input. Use a MutationObserver
@@ -1797,7 +1856,7 @@ $(document).on('click', '#SetDraftButton', function () {
 	changePostStatus({ id: id, postId: postId, newStatus: 'DRAFT', onSuccess: function (resp) {
 		$('#postStatusx').val('DRAFT');
 		if (resp && resp.postId) $('#postIdx').val(resp.postId);
-		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'lightcoral'; } catch (e) {}
+		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'lemonchiffon'; } catch (e) {}
 		// toggle buttons
 		try { document.getElementById('PublishButton').style.display = 'inline-block'; } catch (e) {}
 		try { document.getElementById('SetDraftButton').style.display = 'none'; } catch (e) {}
@@ -1829,7 +1888,7 @@ $(document).on('click', '#SetDraftPreviewButton', function () {
 	changePostStatus({ id: id, postId: postId, newStatus: 'DRAFT', onSuccess: function (resp) {
 		previewedTermData.postStatus = 'DRAFT';
 		if (resp && resp.postId) previewedTermData.postId = resp.postId;
-		try { document.querySelector('#confirmationModal .modal-header').style.backgroundColor = 'lightcoral'; } catch (e) {}
+		try { document.querySelector('#confirmationModal .modal-header').style.backgroundColor = 'lemonchiffon'; } catch (e) {}
 		// toggle buttons
 		try { document.getElementById('PublishPreviewButton').style.display = 'inline-block'; } catch (e) {}
 		try { document.getElementById('SetDraftPreviewButton').style.display = 'none'; } catch (e) {}

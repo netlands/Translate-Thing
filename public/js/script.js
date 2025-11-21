@@ -308,6 +308,18 @@ ready(function(){ // $(document).ready(function () {
         updateTable('');
     });
 
+	// Ensure header color is set correctly whenever the Edit modal is shown
+	$('#myModalx').on('show.bs.modal', function () {
+		try {
+			const ps = ($('#postStatusx').val() || '').toString().trim().toUpperCase();
+			const header = document.querySelector('#myModalx .modal-header');
+			if (!header) return;
+			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
+			else if (ps === 'DRAFT') header.style.backgroundColor = 'lightcoral';
+			else header.style.backgroundColor = '';
+		} catch (e) { console.error('Error setting modal header color on show', e); }
+	});
+
 	$('#myModal').on('hidden.bs.modal', function () {
 		// When the modal is closed, reset the form and hide the 'Display existing' button.
 		// We will no longer clear existingTermData here to prevent race conditions.
@@ -420,6 +432,11 @@ ready(function(){ // $(document).ready(function () {
 	        $('#PostFromEditButton').show();
 	        //$('#MoveToGlossaryButton').show();
 			$('#myModalx .modal-title').text('Edit Term');
+		// Clear any header background color applied for postStatus
+		try {
+			const hdr = document.querySelector('#myModalx .modal-header');
+			if (hdr) hdr.style.backgroundColor = '';
+		} catch (e) { }
 	    });
 	
 	    $('#viewTermButton').on('click', function() {
@@ -1354,7 +1371,7 @@ function getFields(row) {
 				console.log('Existing Blogger Post Data:', exsistingPostData);
 
 				if (exsistingPostData) {
-					const entryData = { en, ja, furigana, romaji, ja2, en2, context, type: typeStr, priority, group, note, id, postId };
+					const entryData = { en, ja, furigana, romaji, ja2, en2, context, type: typeStr, priority, group, note, id, postId, postStatus };
 					
 					$.ajax({
 						url: '/api/create-glossary-page',
@@ -1425,6 +1442,18 @@ function getFields(row) {
 
 	// This is now the single source of truth for the context menu.
 	currentRowData = { en, ja, id };
+
+	// Color the modal header based on postStatus (ACTIVE -> lightgreen, DRAFT -> lightcoral)
+	try {
+		const header = document.querySelector('#myModalx .modal-header');
+		const ps = (postStatus || '').toString().trim().toUpperCase();
+		if (header) {
+			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
+			else if (ps === 'DRAFT') header.style.backgroundColor = 'lightcoral';
+			else header.style.backgroundColor = '';
+		}
+	} catch (e) { console.error('Failed to set modal header color', e); }
+
 	$('#myModalx').modal('show'); 
 }
 

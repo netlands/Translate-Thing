@@ -362,6 +362,34 @@ app.post('/api/change-post-status', async function (req, res) {
 	}
 });
 
+// Set postStatus locally in the DB without calling Blogger (used when we discover actual remote state)
+app.post('/api/set-local-post-status', function (req, res) {
+	const { id, postId, postStatus } = req.body;
+	if (!postStatus) return res.status(400).json({ success: false, message: 'Missing postStatus' });
+	try {
+		let stmt;
+		let info;
+		if (id) {
+			stmt = db.prepare(`UPDATE ${tableName} SET postStatus = ? WHERE id = ?`);
+			info = stmt.run(postStatus, id);
+		} else if (postId) {
+			stmt = db.prepare(`UPDATE ${tableName} SET postStatus = ? WHERE postId = ?`);
+			info = stmt.run(postStatus, postId);
+		} else {
+			return res.status(400).json({ success: false, message: 'Missing id or postId' });
+		}
+
+		if (info && info.changes && info.changes > 0) {
+			res.json({ success: true, message: 'postStatus updated locally', postStatus: postStatus });
+		} else {
+			res.status(404).json({ success: false, message: 'Entry not found' });
+		}
+	} catch (err) {
+		console.error('Error setting local postStatus:', err);
+		res.status(500).json({ success: false, message: 'Server error', error: err.message });
+	}
+});
+
 // Check if an English term exists in the glossary
 app.get('/api/glossary/check', function (req, res) {
     const englishTerm = req.query.en;

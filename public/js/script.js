@@ -1407,6 +1407,38 @@ function getFields(row) {
 				exsistingPostData = data;
 				console.log('Existing Blogger Post Data:', exsistingPostData);
 
+				// If the blogger post returns a status, map it and update our local DB entry if needed
+				try {
+					const remoteStatusRaw = (exsistingPostData.status || '').toString().trim().toUpperCase();
+					let mappedStatus = '';
+					if (remoteStatusRaw === 'LIVE') mappedStatus = 'ACTIVE';
+					else if (remoteStatusRaw === 'DRAFT') mappedStatus = 'DRAFT';
+					if (mappedStatus) {
+						// Only update if different from current table value
+						const current = (postStatus || '').toString().trim().toUpperCase();
+						if (current !== mappedStatus) {
+							$.ajax({
+								url: '/api/set-local-post-status',
+								type: 'POST',
+								contentType: 'application/json',
+								data: JSON.stringify({ id: id, postId: postId, postStatus: mappedStatus })
+							}).done(function (resp) {
+								if (resp && resp.success) {
+									// reflect in-modal fields and UI
+									$('#postStatusx').val(mappedStatus);
+									try { document.querySelector('#myModalx .modal-header').style.backgroundColor = mappedStatus === 'ACTIVE' ? 'lightgreen' : 'lightcoral'; } catch (e) {}
+									// toggle edit modal buttons
+									try { document.getElementById('PublishButton').style.display = mappedStatus === 'ACTIVE' ? 'none' : 'inline-block'; } catch (e) {}
+									try { document.getElementById('SetDraftButton').style.display = mappedStatus === 'ACTIVE' ? 'inline-block' : 'none'; } catch (e) {}
+									updateTable('');
+								}
+							}).fail(function () {
+								console.error('Failed to update local postStatus after fetching Blogger post');
+							});
+						}
+					}
+				} catch (e) { console.error('Error processing remote post status', e); }
+
 				if (exsistingPostData) {
 					const entryData = { en, ja, furigana, romaji, ja2, en2, context, type: typeStr, priority, group, note, id, postId, postStatus };
 					

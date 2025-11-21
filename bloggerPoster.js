@@ -148,6 +148,53 @@ function cleanPostObject(post) {
 
 module.exports = { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client, cleanPostObject };
 
+// Publish an existing draft post on Blogger (postId required)
+async function publishPostOnBlogger(postId) {
+  if (fs.existsSync(TOKEN_PATH)) {
+    const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
+    oauth2Client.setCredentials(tokens);
+  } else {
+    const authUrl = oauth2Client.generateAuthUrl({ access_type: 'offline', scope: ['https://www.googleapis.com/auth/blogger'] });
+    const error = new Error('Authentication required.');
+    error.authUrl = authUrl;
+    throw error;
+  }
+  const blogger = google.blogger({ version: 'v3', auth: oauth2Client });
+  try {
+    const res = await blogger.posts.publish({ blogId: BLOG_ID, postId: String(postId) });
+    console.log('✅ Post published (publishPostOnBlogger):', res.data.id);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Failed to publish post:', err.message || err);
+    throw err;
+  }
+}
+
+// Revert a published post back to draft on Blogger (postId required)
+async function revertPostToDraftOnBlogger(postId) {
+  if (fs.existsSync(TOKEN_PATH)) {
+    const tokens = JSON.parse(fs.readFileSync(TOKEN_PATH));
+    oauth2Client.setCredentials(tokens);
+  } else {
+    const authUrl = oauth2Client.generateAuthUrl({ access_type: 'offline', scope: ['https://www.googleapis.com/auth/blogger'] });
+    const error = new Error('Authentication required.');
+    error.authUrl = authUrl;
+    throw error;
+  }
+  const blogger = google.blogger({ version: 'v3', auth: oauth2Client });
+  try {
+    const res = await blogger.posts.revert({ blogId: BLOG_ID, postId: String(postId) });
+    console.log('✅ Post reverted to draft (revertPostToDraftOnBlogger):', res.data.id);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Failed to revert post to draft:', err.message || err);
+    throw err;
+  }
+}
+
+// Export new helpers
+module.exports = Object.assign(module.exports, { publishPostOnBlogger, revertPostToDraftOnBlogger });
+
 
 /*
 // Sample post input:

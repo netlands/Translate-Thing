@@ -43,7 +43,7 @@ async function kanaToModernHepburn(kana) {
 
 
 
-const { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client, cleanPostObject } = require('./bloggerPoster');
+const { postToBlogger, updatePostOnBlogger, getPostFromBlogger, oauth2Client, cleanPostObject, publishPostOnBlogger, revertPostToDraftOnBlogger } = require('./bloggerPoster');
 
 // body parser for POST
 app.use(express.json({ limit: '10mb' }));
@@ -256,6 +256,109 @@ app.post('/api/update-post-id', function (req, res) {
 	} catch (error) {
 		console.error('Error updating postId:', error);
 		res.status(500).json({ success: false, message: 'Server error while updating postId.' });
+	}
+});
+
+// Change postStatus for an entry. Accepts { id, postStatus } or { postId, postStatus }
+app.post('/api/change-post-status', async function (req, res) {
+	const { id, postId, postStatus } = req.body;
+	if (!postStatus) return res.status(400).json({ success: false, message: 'Missing postStatus' });
+	const desired = (postStatus || '').toString().trim().toUpperCase();
+	try {
+		// First, locate the DB row
+		let row;
+		if (id) {
+			row = db.prepare(`SELECT * FROM ${tableName} WHERE id = ?`).get(id);
+		} else if (postId) {
+			row = db.prepare(`SELECT * FROM ${tableName} WHERE postId = ?`).get(postId);
+		} else {
+			return res.status(400).json({ success: false, message: 'Missing id or postId' });
+		}
+		if (!row) return res.status(404).json({ success: false, message: 'Entry not found' });
+
+		// Helper to update DB after successful Blogger change
+		function updateDbStatusForRow(dbId, newStatus, newPostId) {
+			const updates = [];
+			const params = [];
+			if (newStatus !== undefined) {
+				updates.push('postStatus = ?');
+				params.push(newStatus);
+			}
+			if (newPostId !== undefined) {
+				updates.push('postId = ?');
+				params.push(newPostId);
+			}
+			if (updates.length === 0) return;
+			params.push(dbId);
+			const stmt = db.prepare(`UPDATE ${tableName} SET ${updates.join(', ')} WHERE id = ?`);
+			stmt.run(...params);
+		}
+
+		// If requested ACTIVE -> publish or create+publish
+		if (desired === 'ACTIVE') {
+			if (row.postId) {
+				// publish existing post
+				try {
+					await publishPostOnBlogger(row.postId);
+					updateDbStatusForRow(row.id, 'ACTIVE');
+					return res.json({ success: true, message: 'Post published and status updated', postStatus: 'ACTIVE' });
+				} catch (err) {
+					if (err && err.authUrl) return res.status(401).json({ success: false, message: 'Authentication required', authUrl: err.authUrl });
+					console.error('Error publishing post:', err);
+					return res.status(500).json({ success: false, message: 'Failed to publish post', error: err.message || String(err) });
+				}
+			} else {
+				// create new live post (not draft)
+				try {
+					const generatedHtml = await createPostPage(row);
+					const labels = (row.group || '').split(',').map(s => s.trim()).filter(Boolean);
+					const result = await postToBlogger({ title: row.en, content: generatedHtml, labels: labels }, false);
+					const newPostId = result && result.id ? result.id : null;
+					updateDbStatusForRow(row.id, 'ACTIVE', newPostId);
+					return res.json({ success: true, message: 'Post created and published', postStatus: 'ACTIVE', postId: newPostId });
+				} catch (err) {
+					if (err && err.authUrl) return res.status(401).json({ success: false, message: 'Authentication required', authUrl: err.authUrl });
+					console.error('Error creating/publishing post:', err);
+					return res.status(500).json({ success: false, message: 'Failed to create/publish post', error: err.message || String(err) });
+				}
+			}
+		}
+
+		// If requested DRAFT -> revert or create as draft
+		if (desired === 'DRAFT') {
+			if (row.postId) {
+				try {
+					await revertPostToDraftOnBlogger(row.postId);
+					updateDbStatusForRow(row.id, 'DRAFT');
+					return res.json({ success: true, message: 'Post reverted to draft and status updated', postStatus: 'DRAFT' });
+				} catch (err) {
+					if (err && err.authUrl) return res.status(401).json({ success: false, message: 'Authentication required', authUrl: err.authUrl });
+					console.error('Error reverting post to draft:', err);
+					return res.status(500).json({ success: false, message: 'Failed to revert post', error: err.message || String(err) });
+				}
+			} else {
+				// create a draft post
+				try {
+					const generatedHtml = await createPostPage(row);
+					const labels = (row.group || '').split(',').map(s => s.trim()).filter(Boolean);
+					const result = await postToBlogger({ title: row.en, content: generatedHtml, labels: labels }, true);
+					const newPostId = result && result.id ? result.id : null;
+					updateDbStatusForRow(row.id, 'DRAFT', newPostId);
+					return res.json({ success: true, message: 'Draft created and status updated', postStatus: 'DRAFT', postId: newPostId });
+				} catch (err) {
+					if (err && err.authUrl) return res.status(401).json({ success: false, message: 'Authentication required', authUrl: err.authUrl });
+					console.error('Error creating draft post:', err);
+					return res.status(500).json({ success: false, message: 'Failed to create draft', error: err.message || String(err) });
+				}
+			}
+		}
+
+		// For other statuses, just update DB locally
+		updateDbStatusForRow(row.id, desired);
+		return res.json({ success: true, message: 'postStatus updated locally', postStatus: desired });
+	} catch (err) {
+		console.error('Error changing postStatus:', err);
+		res.status(500).json({ success: false, message: 'Server error', error: err.message });
 	}
 });
 

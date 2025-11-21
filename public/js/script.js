@@ -317,6 +317,20 @@ ready(function(){ // $(document).ready(function () {
 			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
 			else if (ps === 'DRAFT') header.style.backgroundColor = 'lightcoral';
 			else header.style.backgroundColor = '';
+
+			// Show/hide Publish / Set Draft buttons based on status
+			try {
+				const pubBtn = document.getElementById('PublishButton');
+				const draftBtn = document.getElementById('SetDraftButton');
+				if (ps === 'ACTIVE') {
+					if (pubBtn) pubBtn.style.display = 'none';
+					if (draftBtn) draftBtn.style.display = 'inline-block';
+				} else {
+					// DRAFT or empty -> show Publish, hide SetDraft unless explicitly ACTIVE
+					if (pubBtn) pubBtn.style.display = 'inline-block';
+					if (draftBtn) draftBtn.style.display = 'none';
+				}
+			} catch (e) { console.error('Error setting modal action buttons', e); }
 		} catch (e) { console.error('Error setting modal header color on show', e); }
 	});
 
@@ -993,6 +1007,29 @@ document.addEventListener('DOMContentLoaded', function () {
 					// Show the Post and Edit buttons for preview mode
 					$('#PostFromPreviewButton').show();
 					$('#editFromPreviewButton').show();
+
+					// Show/hide Publish / SetDraft buttons in preview based on postStatus
+					try {
+						const ps = (entryData.postStatus || '').toString().trim().toUpperCase();
+						const pubPrev = document.getElementById('PublishPreviewButton');
+						const draftPrev = document.getElementById('SetDraftPreviewButton');
+						if (ps === 'ACTIVE') {
+							if (pubPrev) pubPrev.style.display = 'none';
+							if (draftPrev) draftPrev.style.display = 'inline-block';
+						} else {
+							if (pubPrev) pubPrev.style.display = 'inline-block';
+							if (draftPrev) draftPrev.style.display = 'none';
+						}
+						// set header color in preview modal
+						try {
+							const hdr = document.querySelector('#confirmationModal .modal-header');
+							if (hdr) {
+								if (ps === 'ACTIVE') hdr.style.backgroundColor = 'lightgreen';
+								else if (ps === 'DRAFT') hdr.style.backgroundColor = 'lightcoral';
+								else hdr.style.backgroundColor = '';
+							}
+						} catch (e) {}
+					} catch (e) { console.error('Error setting preview action buttons', e); }
 				}).fail(function() {
 					let msg = 'Error creating glossary page.';
 					alert(msg);
@@ -1678,3 +1715,92 @@ function unescapeTags(input) {
 // Try initial placement after load and schedule a couple attempts to cover timing
 setTimeout(placeRefreshInline, 200);
 window.addEventListener('load', function () { setTimeout(placeRefreshInline, 300); });
+
+// Helper to change postStatus via API and update UI
+function changePostStatus({ id, postId, newStatus, onSuccess, onError }) {
+	try {
+		$.ajax({
+			url: '/api/change-post-status',
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({ id: id, postId: postId, postStatus: newStatus })
+		}).done(function (data) {
+			if (data && data.success) {
+				if (typeof onSuccess === 'function') onSuccess(data);
+			} else {
+				if (typeof onError === 'function') onError(data);
+				else alert('Failed to change status: ' + (data && data.message ? data.message : JSON.stringify(data)));
+			}
+		}).fail(function (xhr) {
+			let msg = 'Error changing post status';
+			try { msg = JSON.parse(xhr.responseText).message || xhr.responseText; } catch (e) {}
+			if (typeof onError === 'function') onError({ message: msg });
+			else alert(msg);
+		});
+	} catch (e) {
+		console.error('changePostStatus error', e);
+		if (typeof onError === 'function') onError(e);
+	}
+}
+
+// Wire up buttons (edit modal)
+$(document).on('click', '#PublishButton', function () {
+	const id = $('#idx').val() || null;
+	const postId = $('#postIdx').val() || null;
+	changePostStatus({ id: id, postId: postId, newStatus: 'ACTIVE', onSuccess: function (resp) {
+		// update local inputs and header, refresh table
+		$('#postStatusx').val('ACTIVE');
+		if (resp && resp.postId) $('#postIdx').val(resp.postId);
+		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'lightgreen'; } catch (e) {}
+		// toggle buttons
+		try { document.getElementById('PublishButton').style.display = 'none'; } catch (e) {}
+		try { document.getElementById('SetDraftButton').style.display = 'inline-block'; } catch (e) {}
+		updateTable('');
+	}});
+});
+
+$(document).on('click', '#SetDraftButton', function () {
+	const id = $('#idx').val() || null;
+	const postId = $('#postIdx').val() || null;
+	changePostStatus({ id: id, postId: postId, newStatus: 'DRAFT', onSuccess: function (resp) {
+		$('#postStatusx').val('DRAFT');
+		if (resp && resp.postId) $('#postIdx').val(resp.postId);
+		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'lightcoral'; } catch (e) {}
+		// toggle buttons
+		try { document.getElementById('PublishButton').style.display = 'inline-block'; } catch (e) {}
+		try { document.getElementById('SetDraftButton').style.display = 'none'; } catch (e) {}
+		updateTable('');
+	}});
+});
+
+// Wire up buttons (preview modal)
+$(document).on('click', '#PublishPreviewButton', function () {
+	if (!previewedTermData) return alert('No entry selected');
+	const id = previewedTermData.id || null;
+	const postId = previewedTermData.postId || null;
+	changePostStatus({ id: id, postId: postId, newStatus: 'ACTIVE', onSuccess: function (resp) {
+		// update previewed data and UI
+		previewedTermData.postStatus = 'ACTIVE';
+		if (resp && resp.postId) previewedTermData.postId = resp.postId;
+		try { document.querySelector('#confirmationModal .modal-header').style.backgroundColor = 'lightgreen'; } catch (e) {}
+		// toggle buttons
+		try { document.getElementById('PublishPreviewButton').style.display = 'none'; } catch (e) {}
+		try { document.getElementById('SetDraftPreviewButton').style.display = 'inline-block'; } catch (e) {}
+		updateTable('');
+	}});
+});
+
+$(document).on('click', '#SetDraftPreviewButton', function () {
+	if (!previewedTermData) return alert('No entry selected');
+	const id = previewedTermData.id || null;
+	const postId = previewedTermData.postId || null;
+	changePostStatus({ id: id, postId: postId, newStatus: 'DRAFT', onSuccess: function (resp) {
+		previewedTermData.postStatus = 'DRAFT';
+		if (resp && resp.postId) previewedTermData.postId = resp.postId;
+		try { document.querySelector('#confirmationModal .modal-header').style.backgroundColor = 'lightcoral'; } catch (e) {}
+		// toggle buttons
+		try { document.getElementById('PublishPreviewButton').style.display = 'inline-block'; } catch (e) {}
+		try { document.getElementById('SetDraftPreviewButton').style.display = 'none'; } catch (e) {}
+		updateTable('');
+	}});
+});

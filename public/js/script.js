@@ -1597,6 +1597,44 @@ function prettifyHTML(html) {
 }
 
 
+function escapeTags(input) {
+  // Escape full <div><a><img></a></div> structure
+  input = input.replace(
+    /<div\s+class="separator"\s+style="clear:\s*both;">\s*<a([^>]*)>\s*<img([^>]*)>\s*<\/a>\s*<\/div>/gi,
+    (match, aAttrs, imgAttrs) =>
+      `{div class="separator" style="clear: both;"}{a${aAttrs}}{img${imgAttrs}}{/a}{/div}`
+  );
+
+  // Escape standalone <a><img></a> (not already escaped)
+  input = input.replace(
+    /<a([^>]*)>\s*<img([^>]*)>\s*<\/a>/gi,
+    (match, aAttrs, imgAttrs) =>
+      `{a${aAttrs}}{img${imgAttrs}}{/a}`
+  );
+
+  return input;
+}
+
+function unescapeTags(input) {
+  // Unescape full structure
+  input = input.replace(
+    /\{div class="separator" style="clear: both;"\}\{a([^}]*)\}\{img([^}]*)\}\{\/a\}\{\/div\}/gi,
+    (match, aAttrs, imgAttrs) =>
+      `<div class="separator" style="clear: both;"><a${aAttrs}><img${imgAttrs}></a></div>`
+  );
+
+  // Unescape standalone {a}{img}{/a}
+  input = input.replace(
+    /\{a([^}]*)\}\{img([^}]*)\}\{\/a\}/gi,
+    (match, aAttrs, imgAttrs) =>
+      `<a${aAttrs}><img${imgAttrs}></a>`
+  );
+
+  return input;
+}
+
+
+
 
 
 // Try initial placement after load and schedule a couple attempts to cover timing

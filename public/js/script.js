@@ -282,6 +282,7 @@ ready(function(){ // $(document).ready(function () {
 
 			grid.updateConfig({
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+					{ name: 'postStatus', hidden: true },					
 					{ name: 'postId', hidden: true },
 					{ name: 'id', hidden: true },
 				],
@@ -339,6 +340,7 @@ ready(function(){ // $(document).ready(function () {
 				$("#groupx").val(existingTermData.group);
 				$("#notex").val(existingTermData.note);
 				$("#idx").val(existingTermData.id);
+				$("#postStatusx").val(existingTermData.postStatus);				
 				if (document.getElementById("postIdx")) {
 					document.getElementById("postIdx").value = existingTermData.postId;
 				}
@@ -386,6 +388,7 @@ ready(function(){ // $(document).ready(function () {
 				$("#groupx").val(previewedTermData.group);
 				$("#notex").val(previewedTermData.note);
 				$("#idx").val(previewedTermData.id);
+				$("#postStatusx").val(previewedTermData.postStatus);
 				$("#postIdx").val(previewedTermData.postId);
 
 				const postButton = document.getElementById('PostFromEditButton');
@@ -433,6 +436,7 @@ ready(function(){ // $(document).ready(function () {
 	            group: $("#groupx").val(),
 	            note: $("#notex").val(),
 	            id: $("#idx").val(),
+	            postStatus: $("#postStatusx").val(),				
 				postId: $("#postIdx").val()
 	        };
 
@@ -478,6 +482,7 @@ ready(function(){ // $(document).ready(function () {
 				group: $("#groupx").val(),
 				note: $("#notex").val(),
 				id: $("#idx").val(),
+				postStatus: $("#postStatusx").val(),
 				postId: $("#postIdx").val()
 			};
 			doPostToGlossary(entryData);
@@ -619,6 +624,7 @@ function updateTable(term) {
 			}).render(document.getElementById('table'));
 			grid.updateConfig({
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+					{ name: 'postStatus', hidden: true },
 					{ name: 'postId', hidden: true },
 					{ name: 'id', hidden: true },
 				],
@@ -673,6 +679,7 @@ function updateTable(term) {
 			// hide id field
 			grid.updateConfig({			
 				columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+					{ name: 'postStatus', hidden: true },
 					{ name: 'postId', hidden: true },
 					{ name: "id",
 					hidden: true },
@@ -750,6 +757,7 @@ function renderGridFromRows(rows, term) {
 	}).render(document.getElementById('table'));
 	grid.updateConfig({
 		columns: ["en", "ja", "furigana","romaji", "ja2", "en2", "context", "type", "priority", "group", "note",
+			{ name: 'postStatus', hidden: true },
 			{ name: 'postId', hidden: true },
 			{ name: 'id', hidden: true },
 		],
@@ -1331,8 +1339,9 @@ function getFields(row) {
 	priority = cells[8]["data"]; 
 	group = cells[9]["data"]; 
 	note = cells[10]["data"]; 
-	postId = cells[11]["data"];
-	id = cells[12]["data"];
+	postStatus = cells[11]["data"];	
+	postId = cells[12]["data"];
+	id = cells[13]["data"];
 	console.log("id:", id, "postId:", postId);
 	if (postId != null && postId !== '') {
 		existingPost = true;
@@ -1403,10 +1412,10 @@ function getFields(row) {
 	document.getElementById("groupx").value = group;
 	document.getElementById("notex").value = note;
 	document.getElementById("idx").value = id;
+	document.getElementById("postStatusx").value = postStatus;
 	if (document.getElementById("postIdx")) {
 		document.getElementById("postIdx").value = postId;
 	}
-
 	const postButton = document.getElementById('PostFromEditButton');
 	if (existingPost) {
 		postButton.textContent = 'Update Post';

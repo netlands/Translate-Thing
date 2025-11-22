@@ -79,12 +79,15 @@ function atomParser(xmlString) {
                 current = current.nextSibling;
             }
             
-            const tempDiv = document.createElement('div');
+            definition = htmlToMarkdown(definitionHTML.trim());
+            definition = cleanSpacing(definition);
+            
+            /*const tempDiv = document.createElement('div');
             tempDiv.innerHTML = definitionHTML;
             // Replace </p> with line breaks, then strip all tags
             const withLineBreaks = tempDiv.innerHTML.replace(/<\/p>/gi, '</p>\n');
             tempDiv.innerHTML = withLineBreaks;
-            definition = tempDiv.innerText.trim();
+            definition = tempDiv.innerText.trim();*/
         }
         
         const titleElement = entry.querySelector("title");
@@ -104,4 +107,66 @@ function atomParser(xmlString) {
     }
 
     return entries.map(parseEntry);
+}
+
+function cleanSpacing(input) {
+  return input
+    // Replace &nbsp; with a normal space
+    .replace(/&nbsp;/g, ' ')
+    // Remove spaces/tabs before newlines (but keep the newline)
+    .replace(/[ \t]+\n/g, '\n')
+    // Convert <br> tags to newlines
+    .replace(/<br\s*\/?>/gi, '\n')
+    // Collapse 3+ consecutive newlines into just 2
+    .replace(/\n{3,}/g, '\n\n')
+    // Trim leading/trailing whitespace
+    .trim();
+}
+
+
+
+
+function htmlToMarkdown(html) {
+  let md = html;
+
+  // Headings <h1>..</h1> → # ...
+  for (let i = 6; i >= 1; i--) {
+    const regex = new RegExp(`<h${i}>(.*?)</h${i}>`, 'gi');
+    md = md.replace(regex, (_, content) => `${'#'.repeat(i)} ${content}\n`);
+  }
+
+  // Ordered lists <ol><li>..</li></ol> → 1. ...
+  md = md.replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, listContent) => {
+    const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+    return items.map((item, idx) => `${idx + 1}. ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+  });
+
+  // Unordered lists <ul><li>..</li></ul> → - ...
+  md = md.replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, listContent) => {
+    const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+    return items.map(item => `- ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+  });
+
+  // Bold <strong>..</strong> → **..**
+  md = md.replace(/<strong>(.*?)<\/strong>/gi, '**$1**');
+
+  // Italic <em>..</em> → *..*
+  md = md.replace(/<em>(.*?)<\/em>/gi, '*$1*');
+
+  // Inline code <code>..</code> → `..`
+  md = md.replace(/<code>(.*?)<\/code>/gi, '`$1`');
+
+  // Links <a href="url">text</a> → [text](url)
+  md = md.replace(/<a href="(.*?)">(.*?)<\/a>/gi, '[$2]($1)');
+
+  // Summary paragraph <p class="summary">..</p> → plain + <!--more-->
+  md = md.replace(/<p class="summary">(.*?)<\/p>\s*<!--more-->/gi, '$1\n');
+
+  // Regular paragraphs <p>..</p> → plain line
+  md = md.replace(/<p>(.*?)<\/p>/gi, '$1\n');
+
+  // Cleanup: remove extra newlines
+  md = md.replace(/\n{2,}/g, '\n\n').trim();
+
+  return md;
 }

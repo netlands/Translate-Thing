@@ -1259,6 +1259,105 @@ app.get('/api/get-blogger-post/:id', async function (req, res) {
 	}
 });
 
+// Convert arbitrary HTML to the DB markdown format using server-side converter
+app.post('/api/convert-html-to-markdown', function (req, res) {
+	try {
+		const html = (req.body && req.body.html) ? req.body.html : '';
+
+		// htmlToMarkdown implementation (kept lightweight and consistent with client)
+		function htmlToMarkdown(htmlIn) {
+			let md = (htmlIn || '');
+			for (let i = 6; i >= 1; i--) {
+				const regex = new RegExp(`<h${i}>(.*?)</h${i}>`, 'gi');
+				md = md.replace(regex, (_, content) => `${'#'.repeat(i)} ${content}\n`);
+			}
+			md = md.replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, listContent) => {
+				const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+				return items.map((item, idx) => `${idx + 1}. ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+			});
+			md = md.replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, listContent) => {
+				const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+				return items.map(item => `- ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+			});
+			md = md.replace(/<strong>(.*?)<\/strong>/gi, '**$1**');
+			md = md.replace(/<em>(.*?)<\/em>/gi, '*$1*');
+			md = md.replace(/<code>(.*?)<\/code>/gi, '`$1`');
+			md = md.replace(/<a href="(.*?)">(.*?)<\/a>/gi, '[$2]($1)');
+			// remove special anchors like <a name="more"></a>
+			md = md.replace(/<a[^>]*name=["']?more["']?[^>]*>\s*<\/a>/gi, '');
+			// handle <p> with attributes (e.g., <p class="summary">) and normal <p>
+			md = md.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, '$1\n');
+			md = md.replace(/\n{2,}/g, '\n\n').trim();
+			return md;
+		}
+
+		function cleanSpacing(input) {
+			return (input || '')
+				.replace(/&nbsp;/g, ' ')
+				.replace(/[ \t]+\n/g, '\n')
+				.replace(/<br\s*\/?>(\s*)/gi, '\n')
+				.replace(/\n{3,}/g, '\n\n')
+				.trim();
+		}
+
+		const md = htmlToMarkdown(html);
+		const cleaned = cleanSpacing(md);
+		res.json({ success: true, markdown: cleaned });
+	} catch (err) {
+		console.error('convert-html-to-markdown error', err);
+		res.status(500).json({ success: false, message: 'Conversion failed', error: (err && err.message) || err });
+	}
+});
+
+// Also support GET for quick testing in-browser: /api/convert-html-to-markdown?html=<encoded>
+app.get('/api/convert-html-to-markdown', function (req, res) {
+	try {
+		const html = (req.query && req.query.html) ? req.query.html : '';
+
+		function htmlToMarkdown(htmlIn) {
+			let md = (htmlIn || '');
+			for (let i = 6; i >= 1; i--) {
+				const regex = new RegExp(`<h${i}>(.*?)</h${i}>`, 'gi');
+				md = md.replace(regex, (_, content) => `${'#'.repeat(i)} ${content}\n`);
+			}
+			md = md.replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, listContent) => {
+				const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+				return items.map((item, idx) => `${idx + 1}. ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+			});
+			md = md.replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, listContent) => {
+				const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+				return items.map(item => `- ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+			});
+			md = md.replace(/<strong>(.*?)<\/strong>/gi, '**$1**');
+			md = md.replace(/<em>(.*?)<\/em>/gi, '*$1*');
+			md = md.replace(/<code>(.*?)<\/code>/gi, '`$1`');
+			md = md.replace(/<a href="(.*?)">(.*?)<\/a>/gi, '[$2]($1)');
+			// remove special anchors like <a name="more"></a>
+			md = md.replace(/<a[^>]*name=["']?more["']?[^>]*>\s*<\/a>/gi, '');
+			// handle <p> with attributes (e.g., <p class="summary">) and normal <p>
+			md = md.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, '$1\n');
+			md = md.replace(/\n{2,}/g, '\n\n').trim();
+			return md;
+		}
+
+		function cleanSpacing(input) {
+			return (input || '')
+				.replace(/&nbsp;/g, ' ')
+				.replace(/[ \t]+\n/g, '\n')
+				.replace(/<br\s*\/?>(\s*)/gi, '\n')
+				.replace(/\n{3,}/g, '\n\n')
+				.trim();
+		}
+
+		const md = htmlToMarkdown(html);
+		const cleaned = cleanSpacing(md);
+		res.json({ success: true, markdown: cleaned });
+	} catch (err) {
+		console.error('convert-html-to-markdown (GET) error', err);
+		res.status(500).json({ success: false, message: 'Conversion failed', error: (err && err.message) || err });
+	}
+});
+
 app.post('/api/import-legacy', (req, res) => {
     const { entries } = req.body;
 

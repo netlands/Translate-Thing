@@ -9,6 +9,15 @@ function toTitleCase(str) {
 		}
 	);
 }
+
+// Wire Refresh button to importPostById (log and optionally apply)
+$(document).on('click', '#RefreshPostButton', function () {
+	const postId = ($('#postIdx').val() || null);
+	if (!postId) return alert('No postId available to refresh from Blogger');
+	importPostById(postId, { apply: true })
+		.then(function (data) { console.log('Refresh applied for postId', postId); })
+		.catch(function (err) { console.error('Refresh failed', err); alert('Failed to refresh post: ' + (err && err.message ? err.message : err)); });
+});
 function ready(fn) {
 	// $(document).ready(function () { ... })
 	if (document.readyState !== 'loading') {
@@ -27,6 +36,25 @@ let originalEditData = null;
 ready(function(){ // $(document).ready(function () {
 	console.log("Page structure loaded!");
 	$('select').selectpicker();
+
+	// Ensure the RefreshPostButton exists in the Edit modal footer; create it if missing
+	try {
+		if (document.querySelector('#myModalx') && !document.getElementById('RefreshPostButton')) {
+			const footer = document.querySelector('#myModalx .modal-footer');
+			if (footer) {
+				const btn = document.createElement('button');
+				btn.type = 'button';
+				btn.id = 'RefreshPostButton';
+				btn.className = 'btn btn-secondary';
+				btn.style.display = 'none';
+				btn.textContent = 'Refresh Post';
+				// insert before PublishButton if present
+				const pub = footer.querySelector('#PublishButton');
+				if (pub) footer.insertBefore(btn, pub);
+				else footer.appendChild(btn);
+			}
+		}
+	} catch (e) { console.error('Failed to ensure RefreshPostButton', e); }
 
 	$("#HButton").on("click", function () {
 		// console.log("Hello there!");
@@ -333,6 +361,31 @@ ready(function(){ // $(document).ready(function () {
 				}
 			} catch (e) { console.error('Error setting modal action buttons', e); }
 		} catch (e) { console.error('Error setting modal header color on show', e); }
+
+		// If the canonical note (`#notex`) contains raw HTML, convert it to markdown-safe text
+		try {
+			const notexEl = document.getElementById('notex');
+			if (notexEl) {
+				let val = (notexEl.value || '').toString();
+				if (/[<>]/.test(val)) {
+					console.log('myModalx: detected HTML in #notex, cleaning');
+					let md = '';
+					if (typeof htmlToMarkdown === 'function') {
+						try { md = htmlToMarkdown(val); } catch (e) { md = ''; }
+					}
+					if (!md) {
+						md = val.replace(/<\/(p|div|h[1-6])>/gi, '\n')
+							.replace(/<br\s*\/?\s*>/gi, '\n')
+							.replace(/<a[^>]*name=["']?more["']?[^>]*>\s*<\/a>/gi, '')
+							.replace(/<[^>]+>/g, '')
+							.replace(/&nbsp;/g, ' ')
+							.trim();
+					}
+					try { if (typeof cleanSpacing === 'function') md = cleanSpacing(md); } catch (e) {}
+					notexEl.value = md;
+				}
+			}
+		} catch (e) { console.error('Error cleaning #notex on modal show', e); }
 	});
 
 	$('#myModal').on('hidden.bs.modal', function () {
@@ -1459,6 +1512,7 @@ function getFields(row) {
 						if (prettyNote !== prettyContent) {
 							console.log('Content is different.');
 							$('#notex').css('background-color', '#FFE4E1');
+							try { $('#RefreshPostButton').show(); } catch (e) {}
 						}
 
 						// Compare title
@@ -1502,6 +1556,9 @@ function getFields(row) {
 	document.getElementById("postStatusx").value = postStatus;
 	if (document.getElementById("postIdx")) {
 		document.getElementById("postIdx").value = postId;
+		try {
+			if (postId && postId.toString().length > 0) { try { $('#RefreshPostButton').css('display','inline-block'); } catch(e){} } else { try { $('#RefreshPostButton').css('display','none'); } catch(e){} }
+		} catch (e) {}
 	}
 	const postButton = document.getElementById('PostFromEditButton');
 	if (existingPost) {
@@ -1760,6 +1817,189 @@ function prettifyHTML(html) {
     if (trimmed.match(/^<\w[^>]*[^/]?>/) && !voidTag(trimmed.match(/^<(\w+)/)?.[1])) indent++; // opening tag
     return formatted;
   }).join('\n');
+}
+
+// Import a Blogger post by postId. If `apply` is true, populate the Edit modal
+// with the fetched content (sanitized + converted). Returns a Promise that
+// resolves with the fetched post object.
+function importPostById(postId, options) {
+	options = options || {};
+	const apply = !!options.apply;
+	return new Promise(function (resolve, reject) {
+		if (!postId) return reject(new Error('postId is required'));
+		$.ajax({ url: `/api/get-blogger-post/${postId}`, type: 'GET' })
+		.done(function (data) {
+			console.log('importPostById: fetched post', data);
+			try {
+				if (apply) {
+					// Reuse the same logic as the Refresh handler: parse and sanitize
+					const title = data.title || '';
+					const content = data.content || '';
+					const status = (data.status || '').toString().toUpperCase();
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(content, 'text/html');
+
+					// Title -> English
+					$('#enx').val(title);
+
+					// Japanese line parsing
+					let ja = '', furigana = '', romaji = '';
+					try {
+						const h4 = doc.querySelector('h4.japanese.notranslate');
+						if (h4) {
+							const parts = h4.textContent.split('・').map(p => p.trim());
+							ja = parts[0] || '';
+							furigana = parts[1] || '';
+							romaji = parts[2] || '';
+						}
+					} catch (e) {}
+					$('#jax').val(ja);
+					$('#furiganax').val(furigana);
+					$('#romajix').val(romaji);
+
+					// Populate group (labels) from Blogger post if available
+					try {
+						if (Array.isArray(data.labels) && data.labels.length > 0) {
+							$('#groupx').val(data.labels.join(','));
+						}
+					} catch (e) {}
+
+					// Populate context from any .tags/.tag elements in the post content or from labels prefixed with #
+					try {
+						let contexts = [];
+						// Look for explicit tags container in the parsed HTML
+						try {
+							const tagsEl = doc.querySelector('.tags') || doc.querySelector('.tag') || doc.querySelector('.labels');
+							if (tagsEl) {
+								// extract words starting with # or comma/space separated tokens
+								const txt = (tagsEl.textContent || '').trim();
+								if (txt) {
+									const found = txt.split(/\s+/).filter(t => t.startsWith('#')).map(t => t.replace(/^#/, ''));
+									contexts = contexts.concat(found);
+								}
+							}
+						} catch(e) {}
+						// If none found, try labels as context fallback (omit labels already placed in group)
+						if (contexts.length === 0 && Array.isArray(data.labels) && data.labels.length > 0) {
+							// treat labels without spaces as contexts too
+							contexts = data.labels.map(l => l.trim()).filter(Boolean);
+						}
+						if (contexts.length > 0) $('#contextx').val(contexts.join(','));
+					} catch (e) {}
+
+					// Extract and sanitize definition HTML
+					let defHtml = '';
+					try {
+						const defEl = doc.querySelector('section.definition');
+						if (defEl) {
+							const tmp = document.createElement('div');
+							tmp.innerHTML = defEl.innerHTML || '';
+							const selectorsToRemove = ['.tags', '.tag', '.label', '.references', 'span.hidden', 'span[hidden]'];
+							selectorsToRemove.forEach(sel => {
+								try { tmp.querySelectorAll(sel).forEach(n => n.remove()); } catch (e) {}
+							});
+							tmp.querySelectorAll('span').forEach(s => { if (s.textContent.trim() === '') s.remove(); });
+							defHtml = tmp.innerHTML.trim();
+						}
+					} catch (e) { defHtml = ''; }
+
+					// Convert to markdown via server endpoint, fallback to client
+					const applyDefMd = function (md) {
+						// Preserve originalEditData (baseline) so change-detection can compare pre-refresh values
+						let hadOriginal = !!originalEditData;
+						try {
+							// If we don't have a baseline, capture the current values before applying the refresh
+							if (!hadOriginal) {
+								originalEditData = {
+									en: (document.getElementById('enx').value || '').toString().trim(),
+									ja: (document.getElementById('jax').value || '').toString().trim(),
+									furigana: (document.getElementById('furiganax').value || '').toString().trim(),
+									romaji: (document.getElementById('romajix').value || '').toString().trim(),
+									ja2: (document.getElementById('ja2x').value || '').toString().trim(),
+									en2: (document.getElementById('en2x').value || '').toString().trim(),
+									context: (document.getElementById('contextx').value || '').toString().trim(),
+									type: (document.getElementById('typex').value || '').toString(),
+									priority: (document.getElementById('priorityx').value || '').toString(),
+									group: (document.getElementById('groupx').value || '').toString().trim(),
+									note: (document.getElementById('notex').value || '').toString().trim()
+								};
+							}
+						} catch (e) { console.error('applyDefMd: capture originalEditData error', e); }
+
+						try { document.getElementById('notex').value = (md || ''); } catch (e) {}
+						try { const mapped = (status === 'LIVE' || status === 'PUBLISHED') ? 'ACTIVE' : 'DRAFT'; $('#postStatusx').val(mapped); if (data.id) $('#postIdx').val(data.id); } catch (e) {}
+						// After applying refreshed values, run change-detection against the preserved baseline
+						try { checkUpdateButtonState(); } catch (e) {}
+					};
+
+					if (defHtml && defHtml.length > 0) {
+						// Request server conversion; if it fails, fallback to a safe client-side converter
+						try {
+							console.log('importPostById: converting definition HTML via server');
+							$.ajax({ url: '/api/convert-html-to-markdown', type: 'POST', contentType: 'application/json', data: JSON.stringify({ html: defHtml }) })
+							.done(function (resp) {
+								try {
+									if (resp && resp.success && typeof resp.markdown === 'string') {
+										console.log('importPostById: server returned markdown (len=' + resp.markdown.length + ')');
+										// If server returned HTML-like content (conversion missed), fallback to client stripping
+										if (/[<>{}]/.test(resp.markdown)) {
+											console.warn('importPostById: server markdown contains HTML, falling back to client cleanup');
+										} else {
+											applyDefMd(resp.markdown);
+											return;
+										}
+									}
+									// fallback: prefer global htmlToMarkdown if available
+									let md = '';
+									if (typeof htmlToMarkdown === 'function') md = htmlToMarkdown(defHtml || '');
+									else {
+										// Minimal safe fallback: strip tags but preserve paragraphs and line breaks
+										md = (defHtml || '')
+											.replace(/<\/(p|div|h[1-6])>/gi, '\n')
+											.replace(/<br\s*\/?\s*>/gi, '\n')
+											.replace(/<[^>]+>/g, '')
+											.replace(/&nbsp;/g, ' ')
+											.trim();
+									}
+									try { if (typeof cleanSpacing === 'function') md = cleanSpacing(md); } catch (e) {}
+									applyDefMd(md);
+								} catch (e) { console.error('importPostById: error handling server response', e); applyDefMd(''); }
+							})
+							.fail(function (xhr) {
+								console.warn('importPostById: server convert failed, using client fallback', xhr && xhr.status);
+								try {
+									let md = '';
+									if (typeof htmlToMarkdown === 'function') md = htmlToMarkdown(defHtml || '');
+									else {
+										md = (defHtml || '')
+											.replace(/<\/(p|div|h[1-6])>/gi, '\n')
+											.replace(/<br\s*\/?\s*>/gi, '\n')
+											.replace(/<[^>]+>/g, '')
+											.replace(/&nbsp;/g, ' ')
+											.trim();
+									}
+									try { if (typeof cleanSpacing === 'function') md = cleanSpacing(md); } catch (e) {}
+									applyDefMd(md);
+								} catch (e) { console.error('importPostById fallback error', e); applyDefMd(''); }
+							});
+						} catch (e) {
+							console.error('importPostById: ajax error', e);
+							try { applyDefMd(''); } catch (ee) {}
+						}
+					} else {
+						applyDefMd('');
+					}
+				}
+			} catch (e) { /* ignore apply errors but still resolve with data */ }
+			resolve(data);
+		})
+		.fail(function (xhr) {
+			let msg = 'Error fetching Blogger post';
+			try { msg = JSON.parse(xhr.responseText).message || xhr.responseText; } catch (e) {}
+			console.error('importPostById failed', msg);
+			reject(new Error(msg));
+		});
+	});
 }
 
 

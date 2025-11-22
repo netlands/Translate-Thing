@@ -16,6 +16,10 @@
 	<link href="/css/bootstrap.min.css" rel="stylesheet" />
 	<link href="/css/mermaid.min.css" rel="stylesheet" />
 	<link href="/css/bootstrap-select.min.css" rel="stylesheet" />
+
+    <!-- Toast UI Editor (CDN) -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 	<style>
         :root {
             --preferred-modal-width: 800px;
@@ -327,14 +331,15 @@
 							<label class="sr-only" for="jax">Japanese</label>
 							<input type="text" class="form-control" id="jax" placeholder="日本語" required>
 						</div>
-						<div class="form-group">
-							<label class="sr-only" for="furiganax">Furigana</label>
-							<input type="text" class="form-control" id="furiganax" placeholder="ふりがな" required
-								onkeyup="addRomaji(this.value,'romajix');">
-						</div>
-						<div class="form-group">
-							<label class="sr-only" for="romajix">Romaji</label>
-							<input type="text" class="form-control" id="romajix" placeholder="romaji">
+						<div class="form-row">
+							<div class="form-group col-md-8">
+								<label class="sr-only" for="furiganax">Furigana</label>
+								<input type="text" class="form-control" id="furiganax" placeholder="ふりがな" required onkeyup="addRomaji(this.value,'romajix');">
+							</div>
+							<div class="form-group col-md-4">
+								<label class="sr-only" for="romajix">Romaji</label>
+								<input type="text" class="form-control" id="romajix" placeholder="romaji">
+							</div>
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="ja2x">Alternative Japanese</label>
@@ -349,33 +354,34 @@
 							<label class="sr-only" for="contextx">Context</label>
 							<input type="text" class="form-control" id="contextx" placeholder="Context (optional)">
 						</div>
-						<div class="form-group">
-							<label class="sr-only" for="typex">Type</label>
-							<select class="form-control" id="typex">
-								<option selected disabled>Select a type</option>
-								<option>technique</option>
-								<option>category</option>
-								<option>property</option>
-								<option>material</option>
-								<option>pattern</option>
-								<option>type</option>
-								<option>part</option>
-								<option>tool</option>
-								<option>color</option>								
-							</select>
-						</div>
-						<div class="form-group">
-							<label class="sr-only" for="priorityx">Priority</label>
-							<input type="number" class="form-control" id="priorityx" placeholder="Priority (optional)">
+						<div class="form-row">
+							<div class="form-group col-md-8">
+								<label class="sr-only" for="typex">Type</label>
+								<select class="form-control" id="typex">
+									<option selected disabled>Select a type</option>
+									<option>technique</option>
+									<option>category</option>
+									<option>property</option>
+									<option>material</option>
+									<option>pattern</option>
+									<option>type</option>
+									<option>part</option>
+									<option>tool</option>
+									<option>color</option>
+								</select>
+							</div>
+							<div class="form-group col-md-4">
+								<label class="sr-only" for="priorityx">Priority</label>
+								<input type="number" class="form-control" id="priorityx" placeholder="Priority (optional)">
+							</div>
 						</div>
 						<div class="form-group">
 							<label class="sr-only" for="groupx">Group</label>
 							<input type="text" class="form-control" id="groupx" placeholder="Group (optional)">
 						</div>
-						<div class="form-group d-flex flex-column flex-grow-1">
+						<div class="form-group d-flex flex-column flex-grow-1" style="margin-bottom: 0px;">
 							<label class="sr-only" for="notex">Note</label>
 							<textarea class="form-control flex-grow-1" id="notex" placeholder="Note (optional)"></textarea>
-							<!--input type="text" class="form-control" id="notex" placeholder="Note (optional)"-->
 						</div>
 
 							<input type="hidden" class="form-control" id="postStatusx">

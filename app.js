@@ -1127,6 +1127,7 @@ async function createPostPage(entry) {
 
 	// Process note into summary and content  
 	const note = entry.note || '';
+	/*
 	const paragraphs = (note || '').trim().split(/\r?\n+/).map(p => p.trim()).filter(Boolean);
 
 	const summary = `<p class="summary">%en2%${paragraphs[0] || '%en2%'}</p>`;
@@ -1134,8 +1135,12 @@ async function createPostPage(entry) {
 	? paragraphs.slice(1).map(p => `<p>${p}</p>`).join('\n'): '';
 
 	generatedHtml = generatedHtml.replace(/%summary%/g, summary).replace(/%content%/g, content);
+	*/
+	let summary = '';
+	let content = markdownToHtml(note || '');
+	generatedHtml = generatedHtml.replace(/%summary%/g, summary).replace(/%content%/g, content);
 	if (isValid(entry.en2)) {
-		generatedHtml = generatedHtml.replace(/%en2%/g, '<span class="literal-meaning">' + entry.en2 + '</span>. ' || '')
+		generatedHtml = generatedHtml.replace('<p class="summary">', '<p class="summary"><span class="literal-meaning">' + entry.en2 + '</span>. ' || '<p class="summary">')
 	}
 	// clean up any unreplaced placeholders
 	generatedHtml = generatedHtml.replace(/%[a-z0-9-]+%/g, '');
@@ -1266,7 +1271,8 @@ app.post('/api/import-legacy', (req, res) => {
         db.exec(`
             CREATE TABLE IF NOT EXISTS legacy (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                postId TEXT,
+                postStatus TEXT,
+				postId TEXT,
                 en TEXT,
                 ja TEXT,
                 ja2 TEXT,
@@ -1278,18 +1284,19 @@ app.post('/api/import-legacy', (req, res) => {
             )
         `);
 
-        const insert = db.prepare('INSERT INTO legacy (postId, en, ja, ja2, furigana, romaji, note, context, "group") VALUES (@postId, @en, @ja, @ja2, @furigana, @romaji, @note, @context, @group)');
+        const insert = db.prepare('INSERT INTO legacy (postId, postStatus, en, ja, ja2, furigana, romaji, note, context, "group") VALUES (@postId, @postStatus, @en, @ja, @ja2, @furigana, @romaji, @note, @context, @group)');
 
         const insertMany = db.transaction((entries) => {
             for (const entry of entries) {
                 insert.run({
                     postId: entry.postId,
+					postStatus: entry.postStatus,
                     en: entry.en,
                     ja: entry.ja,
                     ja2: entry.ja2,
                     furigana: entry.furigana,
                     romaji: entry.romaji,
-                    note: entry.note,
+                    note: htmlToMarkdown(entry.note),
                     context: entry.context,
                     group: entry.group
                 });
@@ -1305,7 +1312,131 @@ app.post('/api/import-legacy', (req, res) => {
     }
 });
 
+function markdownInlineToHtml(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')   // Bold
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')               // Italic
+    .replace(/`(.+?)`/g, '<code>$1</code>')             // Inline code
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>'); // Links
+}
 
+function markdownToHtml(markdown) {
+  const lines = markdown.split('\n');
+  let html = '';
+  let inUnorderedList = false;
+  let inOrderedList = false;
+  let firstParagraphDone = false;
+
+  const closeLists = () => {
+    if (inUnorderedList) {
+      html += '</ul>\n';
+      inUnorderedList = false;
+    }
+    if (inOrderedList) {
+      html += '</ol>\n';
+      inOrderedList = false;
+    }
+  };
+
+  lines.forEach(line => {
+    // Headings
+    if (/^#{1,6}\s/.test(line)) {
+      closeLists();
+      const level = line.match(/^#{1,6}/)[0].length;
+      const content = line.replace(/^#{1,6}\s*/, '');
+      html += `<h${level}>${markdownInlineToHtml(content)}</h${level}>\n`;
+      return;
+    }
+
+    // Ordered list: "1. item"
+    if (/^\s*\d+\.\s+/.test(line)) {
+      if (!inOrderedList) {
+        closeLists();
+        html += '<ol>\n';
+        inOrderedList = true;
+      }
+      const content = line.replace(/^\s*\d+\.\s+/, '');
+      html += `<li>${markdownInlineToHtml(content)}</li>\n`;
+      return;
+    }
+
+    // Unordered list: "- item" or "* item"
+    if (/^\s*[-*]\s+/.test(line)) {
+      if (!inUnorderedList) {
+        closeLists();
+        html += '<ul>\n';
+        inUnorderedList = true;
+      }
+      const content = line.replace(/^\s*[-*]\s+/, '');
+      html += `<li>${markdownInlineToHtml(content)}</li>\n`;
+      return;
+    }
+
+    // Paragraphs
+    if (line.trim() !== '') {
+      closeLists();
+      const content = markdownInlineToHtml(line.trim());
+      if (!firstParagraphDone) {
+        html += `<p class="summary">${content}</p>\n<!--more-->\n`;
+        firstParagraphDone = true;
+      } else {
+        html += `<p>${content}</p>\n`;
+      }
+      return;
+    }
+
+    // Blank line → close lists if any
+    closeLists();
+  });
+
+  closeLists();
+  return html;
+}
+
+function htmlToMarkdown(html) {
+  let md = html;
+
+  // Headings <h1>..</h1> → # ...
+  for (let i = 6; i >= 1; i--) {
+    const regex = new RegExp(`<h${i}>(.*?)</h${i}>`, 'gi');
+    md = md.replace(regex, (_, content) => `${'#'.repeat(i)} ${content}\n`);
+  }
+
+  // Ordered lists <ol><li>..</li></ol> → 1. ...
+  md = md.replace(/<ol>([\s\S]*?)<\/ol>/gi, (_, listContent) => {
+    const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+    return items.map((item, idx) => `${idx + 1}. ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+  });
+
+  // Unordered lists <ul><li>..</li></ul> → - ...
+  md = md.replace(/<ul>([\s\S]*?)<\/ul>/gi, (_, listContent) => {
+    const items = listContent.match(/<li>(.*?)<\/li>/gi) || [];
+    return items.map(item => `- ${item.replace(/<\/?li>/gi, '')}`).join('\n') + '\n';
+  });
+
+  // Bold <strong>..</strong> → **..**
+  md = md.replace(/<strong>(.*?)<\/strong>/gi, '**$1**');
+
+  // Italic <em>..</em> → *..*
+  md = md.replace(/<em>(.*?)<\/em>/gi, '*$1*');
+
+  // Inline code <code>..</code> → `..`
+  md = md.replace(/<code>(.*?)<\/code>/gi, '`$1`');
+
+  // Links <a href="url">text</a> → [text](url)
+  md = md.replace(/<a href="(.*?)">(.*?)<\/a>/gi, '[$2]($1)');
+
+  // Summary paragraph <p class="summary">..</p> → plain + <!--more-->
+  md = md.replace(/<p class="summary">(.*?)<\/p>\s*<!--more-->/gi, '$1\n');
+
+  // Regular paragraphs <p>..</p> → plain line
+  md = md.replace(/<p>(.*?)<\/p>/gi, '$1\n');
+
+  // Cleanup: remove extra newlines
+  md = md.replace(/\n{2,}/g, '\n\n').trim();
+
+  return md;
+}
 
 // const postData = {
 //   title: 'This is the post title',

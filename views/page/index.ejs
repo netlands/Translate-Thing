@@ -21,12 +21,40 @@
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
     <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 	<style>
+		:root {
+		--status-nothing: white;             /* #D3D3D3; Local only */
+		--status-draft: #A7C7E7;             /* Remote, not active */
+		--status-active: #A8D5BA;            /* Published */
+		--status-change-detected: #F6C68D;   /* Difference between local and remote */
+		--status-unsaved-edit: #FFF3B0;      /* Edited but not saved */
+		}
+
         :root {
             --preferred-modal-width: 800px;
         }
         .modal-lg {
-            max-width: var(--preferred-modal-width) !important;
+            max-width: var(--preferred-modal-width) !important;             
         }
+
+		.status-nothing {
+		background-color: var(--status-nothing);
+		}
+
+		.status-draft {
+		background-color: var(--status-draft);
+		}
+
+		.status-active {
+		background-color: var(--status-active);
+		}
+
+		.status-change-detected {
+		background-color: var(--status-change-detected);
+		}
+
+		.status-unsaved-edit {
+		background-color: var(--status-unsaved-edit);
+		}
 
 		#import-legacy-btn::before {
 			display: none !important;

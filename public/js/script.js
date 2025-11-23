@@ -10,6 +10,20 @@ function toTitleCase(str) {
 	);
 }
 
+function setHeaderStatus(header, status) {
+  // Remove any existing status class
+  header.classList.remove(
+    'status-nothing',
+    'status-draft',
+    'status-active',
+    'status-change-detected',
+    'status-unsaved-edit'
+  );
+
+  // Add the new status class
+  header.classList.add(`status-${status}`);
+}
+
 // Wire Refresh button to importPostById (log and optionally apply)
 $(document).on('click', '#RefreshPostButton', function () {
 	const postId = ($('#postIdx').val() || null);
@@ -343,9 +357,9 @@ ready(function(){ // $(document).ready(function () {
 			const ps = ($('#postStatusx').val() || '').toString().trim().toUpperCase();
 			const header = document.querySelector('#myModalx .modal-header');
 			if (!header) return;
-			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
-			else if (ps === 'DRAFT') header.style.backgroundColor = 'lemonchiffon';
-			else header.style.backgroundColor = '';
+			if (ps === 'ACTIVE') setHeaderStatus(header, 'active');
+			else if (ps === 'DRAFT') setHeaderStatus(header, 'draft');
+			else setHeaderStatus(header, 'nothing');
 
 			// Show/hide Publish / Set Draft buttons based on status
 			try {
@@ -1078,9 +1092,9 @@ document.addEventListener('DOMContentLoaded', function () {
 						try {
 							const hdr = document.querySelector('#confirmationModal .modal-header');
 							if (hdr) {
-								if (ps === 'ACTIVE') hdr.style.backgroundColor = 'lightgreen';
-								else if (ps === 'DRAFT') hdr.style.backgroundColor = 'lemonchiffon';
-								else hdr.style.backgroundColor = '';
+								if (ps === 'ACTIVE') setHeaderStatus(hdr, 'active');
+								else if (ps === 'DRAFT') setHeaderStatus(hdr, 'draft');
+								else setHeaderStatus(hdr, 'nothing');
 							}
 						} catch (e) {}
 					} catch (e) { console.error('Error setting preview action buttons', e); }
@@ -1480,7 +1494,10 @@ function getFields(row) {
 								if (resp && resp.success) {
 									// reflect in-modal fields and UI
 									$('#postStatusx').val(mappedStatus);
-									try { document.querySelector('#myModalx .modal-header').style.backgroundColor = mappedStatus === 'ACTIVE' ? 'lightgreen' : 'lemonchiffon'; } catch (e) {} //lightcoral
+									try {
+									const hdr = document.querySelector('#myModalx .modal-header');
+									setHeaderStatus(hdr, mappedStatus === 'ACTIVE' ? 'active' : 'draft');
+									} catch (e) {}
 									// toggle edit modal buttons
 									try { document.getElementById('PublishButton').style.display = mappedStatus === 'ACTIVE' ? 'none' : 'inline-block'; } catch (e) {}
 									try { document.getElementById('SetDraftButton').style.display = mappedStatus === 'ACTIVE' ? 'inline-block' : 'none'; } catch (e) {}
@@ -1594,9 +1611,9 @@ function getFields(row) {
 		const header = document.querySelector('#myModalx .modal-header');
 		const ps = (postStatus || '').toString().trim().toUpperCase();
 		if (header) {
-			if (ps === 'ACTIVE') header.style.backgroundColor = 'lightgreen';
-			else if (ps === 'DRAFT') header.style.backgroundColor = 'lemonchiffon';
-			else header.style.backgroundColor = '';
+			if (ps === 'ACTIVE') setHeaderStatus(header, 'active');
+			else if (ps === 'DRAFT') setHeaderStatus(header, 'draft');
+			else setHeaderStatus(header, 'nothing');;
 		}
 	} catch (e) { console.error('Failed to set modal header color', e); }
 
@@ -2082,7 +2099,7 @@ $(document).on('click', '#PublishButton', function () {
 		// update local inputs and header, refresh table
 		$('#postStatusx').val('ACTIVE');
 		if (resp && resp.postId) $('#postIdx').val(resp.postId);
-		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'lightgreen'; } catch (e) {}
+		try { setHeaderStatus(document.querySelector('#confirmationModal .modal-header'), 'active'); } catch (e) {}
 		// toggle buttons
 		try { document.getElementById('PublishButton').style.display = 'none'; } catch (e) {}
 		try { document.getElementById('SetDraftButton').style.display = 'inline-block'; } catch (e) {}
@@ -2096,7 +2113,7 @@ $(document).on('click', '#SetDraftButton', function () {
 	changePostStatus({ id: id, postId: postId, newStatus: 'DRAFT', onSuccess: function (resp) {
 		$('#postStatusx').val('DRAFT');
 		if (resp && resp.postId) $('#postIdx').val(resp.postId);
-		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'lemonchiffon'; } catch (e) {}
+		try { document.querySelector('#myModalx .modal-header').style.backgroundColor = 'var(--status-draft)'; } catch (e) {}
 		// toggle buttons
 		try { document.getElementById('PublishButton').style.display = 'inline-block'; } catch (e) {}
 		try { document.getElementById('SetDraftButton').style.display = 'none'; } catch (e) {}
@@ -2113,7 +2130,7 @@ $(document).on('click', '#PublishPreviewButton', function () {
 		// update previewed data and UI
 		previewedTermData.postStatus = 'ACTIVE';
 		if (resp && resp.postId) previewedTermData.postId = resp.postId;
-		try { document.querySelector('#confirmationModal .modal-header').style.backgroundColor = 'lightgreen'; } catch (e) {}
+		try { setHeaderStatus(document.querySelector('#confirmationModal .modal-header'), 'active'); } catch (e) {}
 		// toggle buttons
 		try { document.getElementById('PublishPreviewButton').style.display = 'none'; } catch (e) {}
 		try { document.getElementById('SetDraftPreviewButton').style.display = 'inline-block'; } catch (e) {}
@@ -2128,7 +2145,7 @@ $(document).on('click', '#SetDraftPreviewButton', function () {
 	changePostStatus({ id: id, postId: postId, newStatus: 'DRAFT', onSuccess: function (resp) {
 		previewedTermData.postStatus = 'DRAFT';
 		if (resp && resp.postId) previewedTermData.postId = resp.postId;
-		try { document.querySelector('#confirmationModal .modal-header').style.backgroundColor = 'lemonchiffon'; } catch (e) {}
+		try { setHeaderStatus(document.querySelector('#confirmationModal .modal-header'), 'draft'); } catch (e) {}
 		// toggle buttons
 		try { document.getElementById('PublishPreviewButton').style.display = 'inline-block'; } catch (e) {}
 		try { document.getElementById('SetDraftPreviewButton').style.display = 'none'; } catch (e) {}

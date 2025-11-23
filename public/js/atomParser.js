@@ -162,6 +162,10 @@ function htmlToMarkdown(html) {
   // Summary paragraph <p class="summary">..</p> → plain + <!--more-->
   md = md.replace(/<p class="summary">(.*?)<\/p>\s*<!--more-->/gi, '$1\n');
 
+  // Remove <a name="more"></a> tags
+  md = md.replace(/<a\s+name=["']?more["']?\s*><\/a>/gi, '');
+
+
   // Regular paragraphs <p>..</p> → plain line
   md = md.replace(/<p>(.*?)<\/p>/gi, '$1\n');
 

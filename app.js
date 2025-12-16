@@ -30,12 +30,27 @@ async function kanaToModernHepburn(kana) {
     romaji = romaji.replace(/\be\b/g, (_, i) => kana[i] === 'へ' ? 'he' : 'e')
     romaji = romaji.replace(/\bo\b/g, (_, i) => kana[i] === 'を' ? 'wo' : 'o');
 
+	// Safe replacements
+	romaji = romaji.replace(/oo/g, "ō");
+	romaji = romaji.replace(/uu/g, "ū");
+	// romaji = romaji.replace(/ei/g, "ē");
+
+	// fix possibley missed log vowels
+	romaji = romaji.replace(/ou(?![aiueo])/g, "ō");
+	romaji = romaji.replace(/ou$/g, "ō"); 
+
+	/* romaji = romaji.replace(/tou(?=[kstnry])/g, "tō");
+	romaji = romaji.replace(/kou(?=[kstnry])/g, "kō");
+	romaji = romaji.replace(/sou(?=[kstnry])/g, "sō");
+	romaji = romaji.replace(/nou(?=[kstnry])/g, "nō"); */
+	
   // fix Katakana N to M
   const katakanaOnly = /^[\u30A0-\u30FFー\s]+$/.test(kana);
   if (!katakanaOnly) return romaji;
 
   // Replace 'm' before b/m/p with 'n' (only at word boundaries or after vowels)
   return romaji.replace(/([aeiou])m([bmp])/gi, "$1n$2");
+
 }
 
 

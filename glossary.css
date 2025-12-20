@@ -23,6 +23,43 @@
   background-color: orange;
 }
 
+.label {
+  display: inline !important;
+}
+
+#labels, #tags {
+  display: inline-flex;
+  align-items: center; 
+}
+
+
 .literal-meaning {
     font-weight: bold;
 }
+
+h4.japanese {
+  font-size: 0; /* collapse whitespace nodes */
+}
+h4.japanese span {
+  font-size: 1rem; /* restore normal font size for spans */
+}
+
+h4.japanese span.furigana:not(:first-child)::before,
+h4.japanese span.romaji:not(:first-child)::before,
+h4.japanese span.hepburn:not(:first-child)::before,
+h4.japanese span.ja:not(:first-child)::before {
+  content: "・";
+  padding: 0 0.25em; /* equal spacing on both sides */
+}
+
+h4.japanese span.ja-alternative-writing:not(:first-child)::before {
+  content: "（";
+  padding-left: 0.5em; 
+  padding-right: 0.1em;
+}
+
+h4.japanese span.ja-alternative-writing:not(:first-child)::after {
+  content: "）";
+  padding-left: 0.1em;
+}
+
